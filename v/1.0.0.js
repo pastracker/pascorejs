@@ -22,16 +22,12 @@ window.PasCore = (function() {
         request: async function(endpoint, method = 'GET', data = null, wrapPayload = true) {
             let url = endpoint;
 
-            // CONTEXT-AWARE ROUTING
             if (!endpoint.startsWith('http') && !endpoint.startsWith('/api/')) {
                 let cleanPath = endpoint;
-                if (cleanPath.startsWith('/admin/')) {
-                    cleanPath = cleanPath.replace('/admin', '');
-                }
+                if (cleanPath.startsWith('/admin/')) cleanPath = cleanPath.replace('/admin', '');
                 if (!cleanPath.startsWith('/')) cleanPath = '/' + cleanPath;
                 
                 const pluginUI = document.querySelector('.plugin-custom-ui');
-                
                 if (pluginUI) {
                     const ns = pluginUI.getAttribute('data-active-namespace');
                     url = `/api/${ns}${cleanPath}`;
@@ -49,9 +45,7 @@ window.PasCore = (function() {
                 }
             };
 
-            if (token) {
-                options.headers['Authorization'] = `Bearer ${token}`;
-            }
+            if (token) options.headers['Authorization'] = `Bearer ${token}`;
 
             if (data && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(options.method)) {
                 options.body = JSON.stringify(wrapPayload ? { payload: data } : data);
@@ -140,10 +134,7 @@ window.PasCore = (function() {
     const State = {
         create: function(rootSelector, initialData = {}, methods = {}) {
             const rootEl = document.querySelector(rootSelector);
-            if (!rootEl) {
-                console.warn(`[PasCore.State] Root element ${rootSelector} not found.`);
-                return null;
-            }
+            if (!rootEl) return null;
 
             const updateDOM = (state) => {
                 rootEl.querySelectorAll('[pas-text]').forEach(el => {
@@ -162,11 +153,8 @@ window.PasCore = (function() {
                 rootEl.querySelectorAll('[pas-model]').forEach(el => {
                     const key = el.getAttribute('pas-model');
                     if (state[key] !== undefined && el.value !== state[key]) {
-                        if (el.type === 'checkbox') {
-                            el.checked = !!state[key];
-                        } else {
-                            el.value = state[key];
-                        }
+                        if (el.type === 'checkbox') el.checked = !!state[key];
+                        else el.value = state[key];
                     }
                 });
             };
@@ -181,19 +169,12 @@ window.PasCore = (function() {
 
             rootEl.querySelectorAll('[pas-model]').forEach(el => {
                 const key = el.getAttribute('pas-model');
-                
-                if (el.type === 'checkbox') {
-                    el.checked = !!stateProxy[key];
-                } else {
-                    el.value = stateProxy[key] !== undefined ? stateProxy[key] : ''; 
-                }
+                if (el.type === 'checkbox') el.checked = !!stateProxy[key];
+                else el.value = stateProxy[key] !== undefined ? stateProxy[key] : ''; 
                 
                 el.addEventListener('input', (e) => {
-                    if (e.target.type === 'checkbox') {
-                        stateProxy[key] = e.target.checked;
-                    } else {
-                        stateProxy[key] = e.target.value;
-                    }
+                    if (e.target.type === 'checkbox') stateProxy[key] = e.target.checked;
+                    else stateProxy[key] = e.target.value;
                 });
             });
 
@@ -206,76 +187,58 @@ window.PasCore = (function() {
                         e.preventDefault();
                         methods[funcName].call(methods, stateProxy, e);
                     });
-                } else {
-                    console.warn(`[PasCore.State] Method '${funcName}' is not defined.`);
                 }
             });
 
             updateDOM(stateProxy);
-
             return stateProxy;
         }
     };
 
     // =========================================================================
-    // 4. PASCORE.EDITOR (WYSIWYG Integration Wrapper)
+    // 4. PASCORE.EDITOR (Quill.js Integration Wrapper)
     // =========================================================================
     const Editor = {
-        init: function(elementId, initialContent = '', onChangeCallback = null) {
+        init: function(elementId, initialContent = '') {
             const targetEl = document.getElementById(elementId);
             if (!targetEl) return null;
 
-            if (typeof window.SUNEDITOR === 'undefined') {
-                console.error('[PasCore.Editor] SunEditor library is missing.');
+            if (typeof window.Quill === 'undefined') {
+                console.error('[PasCore.Editor] Quill library is missing. Make sure CDN is loaded.');
                 return null;
             }
 
-            // [PERBAIKAN] Tameng CSS untuk melindungi SunEditor dari Tailwind Preflight
-            if (!document.getElementById('pascore-suneditor-fix')) {
-                const style = document.createElement('style');
-                style.id = 'pascore-suneditor-fix';
-                style.innerHTML = `
-                    /* Reset SVG sizes so they don't blow up */
-                    .sun-editor .se-svg, .sun-editor svg { 
-                        width: 14px !important; 
-                        height: 14px !important; 
-                        display: inline-block !important; 
-                        vertical-align: middle !important;
-                    }
-                    /* Protect dialogs and buttons box-sizing */
-                    .sun-editor button { box-sizing: content-box !important; line-height: normal !important; }
-                    .sun-editor .se-btn:not(:disabled):hover { background-color: #f1f1f1 !important; }
-                    .sun-editor .se-dialog, .sun-editor .se-dialog-tabs, .sun-editor .se-dialog-inner { box-sizing: content-box !important; }
-                    /* Restore input borders inside Find/Replace dialog */
-                    .sun-editor input, .sun-editor select { border-width: 1px !important; border-style: solid !important; border-color: #ccc !important; }
-                    .sun-editor .se-toolbar { z-index: 10 !important; }
-                    .sun-editor .se-resizing-bar { box-sizing: content-box !important; }
-                `;
-                document.head.appendChild(style);
-            }
-
-            // [PERBAIKAN] Mengembalikan pemuatan module 'plugins' agar toolbar tidak crash
-            const editorInstance = window.SUNEDITOR.create(targetEl, {
-                plugins: window.SUNEDITOR.plugins,
-                height: '300px',
-                value: initialContent,
-                buttonList: [
-                    ['undo', 'redo'],
-                    ['formatBlock', 'fontSize'],
-                    ['bold', 'underline', 'italic', 'strike'],
-                    ['fontColor', 'hiliteColor'],
-                    ['removeFormat'],
-                    ['align', 'list', 'lineHeight'],
-                    ['link', 'image', 'video'],
-                    ['fullScreen', 'showBlocks', 'codeView']
-                ]
+            const quill = new window.Quill(targetEl, {
+                theme: 'snow',
+                modules: {
+                    toolbar: [
+                        [{ 'header': [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'color': [] }, { 'background': [] }],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        [{ 'align': [] }],
+                        ['link', 'image', 'video', 'code-block'],
+                        ['clean']
+                    ]
+                }
             });
 
-            if (onChangeCallback) {
-                editorInstance.onChange = onChangeCallback;
+            // Set Initial Content
+            if (initialContent) {
+                quill.clipboard.dangerouslyPasteHTML(initialContent);
             }
 
-            return editorInstance;
+            // Return a standardized PasCore Interface so the plugin logic remains clean
+            return {
+                instance: quill,
+                getContents: function() {
+                    const html = quill.root.innerHTML;
+                    return html === '<p><br></p>' ? '' : html;
+                },
+                setContents: function(html) {
+                    quill.clipboard.dangerouslyPasteHTML(html || '');
+                }
+            };
         }
     };
 
