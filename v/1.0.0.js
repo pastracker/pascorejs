@@ -225,16 +225,50 @@ window.PasCore = (function() {
             const targetEl = document.getElementById(elementId);
             if (!targetEl) return null;
 
-            if (typeof SUNEDITOR === 'undefined') {
+            if (typeof window.SUNEDITOR === 'undefined') {
                 console.error('[PasCore.Editor] SunEditor library is missing.');
                 return null;
             }
 
-            // Dihapus kustomisasi buttonList yang bermasalah.
-            // Membiarkan SunEditor menggunakan default toolbar yang dijamin stabil.
-            const editorInstance = SUNEDITOR.create(targetEl, {
+            // [PERBAIKAN] Tameng CSS untuk melindungi SunEditor dari Tailwind Preflight
+            if (!document.getElementById('pascore-suneditor-fix')) {
+                const style = document.createElement('style');
+                style.id = 'pascore-suneditor-fix';
+                style.innerHTML = `
+                    /* Reset SVG sizes so they don't blow up */
+                    .sun-editor .se-svg, .sun-editor svg { 
+                        width: 14px !important; 
+                        height: 14px !important; 
+                        display: inline-block !important; 
+                        vertical-align: middle !important;
+                    }
+                    /* Protect dialogs and buttons box-sizing */
+                    .sun-editor button { box-sizing: content-box !important; line-height: normal !important; }
+                    .sun-editor .se-btn:not(:disabled):hover { background-color: #f1f1f1 !important; }
+                    .sun-editor .se-dialog, .sun-editor .se-dialog-tabs, .sun-editor .se-dialog-inner { box-sizing: content-box !important; }
+                    /* Restore input borders inside Find/Replace dialog */
+                    .sun-editor input, .sun-editor select { border-width: 1px !important; border-style: solid !important; border-color: #ccc !important; }
+                    .sun-editor .se-toolbar { z-index: 10 !important; }
+                    .sun-editor .se-resizing-bar { box-sizing: content-box !important; }
+                `;
+                document.head.appendChild(style);
+            }
+
+            // [PERBAIKAN] Mengembalikan pemuatan module 'plugins' agar toolbar tidak crash
+            const editorInstance = window.SUNEDITOR.create(targetEl, {
+                plugins: window.SUNEDITOR.plugins,
                 height: '300px',
-                value: initialContent
+                value: initialContent,
+                buttonList: [
+                    ['undo', 'redo'],
+                    ['formatBlock', 'fontSize'],
+                    ['bold', 'underline', 'italic', 'strike'],
+                    ['fontColor', 'hiliteColor'],
+                    ['removeFormat'],
+                    ['align', 'list', 'lineHeight'],
+                    ['link', 'image', 'video'],
+                    ['fullScreen', 'showBlocks', 'codeView']
+                ]
             });
 
             if (onChangeCallback) {
