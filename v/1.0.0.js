@@ -23,24 +23,19 @@ window.PasCore = (function() {
             let url = endpoint;
 
             // CONTEXT-AWARE ROUTING
-            // Automatically determine the correct API path if a relative path is provided
             if (!endpoint.startsWith('http') && !endpoint.startsWith('/api/')) {
-                
-                // Clean up accidental '/admin/' prefixes passed by developers
                 let cleanPath = endpoint;
                 if (cleanPath.startsWith('/admin/')) {
                     cleanPath = cleanPath.replace('/admin', '');
                 }
                 if (!cleanPath.startsWith('/')) cleanPath = '/' + cleanPath;
                 
-                // Detect if the script is running inside a Plugin UI boundary
                 const pluginUI = document.querySelector('.plugin-custom-ui');
                 
                 if (pluginUI) {
                     const ns = pluginUI.getAttribute('data-active-namespace');
                     url = `/api/${ns}${cleanPath}`;
                 } else {
-                    // Running inside Core Admin System
                     url = `/api/admin${cleanPath}`;
                 }
             }
@@ -58,7 +53,6 @@ window.PasCore = (function() {
                 options.headers['Authorization'] = `Bearer ${token}`;
             }
 
-            // Enforce PasCore Backend standard: wrap outgoing data inside { payload: ... }
             if (data && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(options.method)) {
                 options.body = JSON.stringify(wrapPayload ? { payload: data } : data);
             }
@@ -66,7 +60,6 @@ window.PasCore = (function() {
             try {
                 const response = await fetch(url, options);
                 
-                // Intercept unauthorized or expired sessions globally
                 if (response.status === 401 || response.status === 403) {
                     console.error('[PasCore.Net] Unauthorized. Session expired.');
                     PasCore.UI.toast('error', 'Session expired. Please log in again.');
@@ -74,7 +67,6 @@ window.PasCore = (function() {
                     return { success: false, message: 'Unauthorized' };
                 }
 
-                // Handle non-JSON or empty responses gracefully
                 const contentType = response.headers.get("content-type");
                 let result = {};
                 if (contentType && contentType.includes("application/json")) {
@@ -84,7 +76,6 @@ window.PasCore = (function() {
                     result = { success: response.ok, message: textData };
                 }
                 
-                // Standardize the return payload
                 return {
                     success: response.ok && result.success !== false,
                     data: result.data || result,
@@ -103,13 +94,11 @@ window.PasCore = (function() {
         del: function(endpoint, data, wrap = true) { return this.request(endpoint, 'DELETE', data, wrap); }
     };
 
-
     // =========================================================================
     // 2. PASCORE.UI (DOM Utilities & Notifications)
     // =========================================================================
     const UI = {
         toast: function(type, message) {
-            // Fallback to legacy Alpine toast if it still exists in the DOM transition period
             if (window.Alpine && window.Alpine.store('toast')) {
                 window.Alpine.store('toast').show(type, message);
                 return;
@@ -132,13 +121,11 @@ window.PasCore = (function() {
             
             container.appendChild(toast);
             
-            // Trigger entry animation
             requestAnimationFrame(() => {
                 toast.classList.remove('translate-y-10', 'opacity-0');
                 toast.classList.add('translate-y-0', 'opacity-100');
             });
 
-            // Auto remove toast after 4 seconds
             setTimeout(() => {
                 toast.classList.remove('translate-y-0', 'opacity-100');
                 toast.classList.add('translate-y-10', 'opacity-0');
@@ -147,18 +134,10 @@ window.PasCore = (function() {
         }
     };
 
-
     // =========================================================================
     // 3. PASCORE.STATE (Reactive Engine - WebOS Core)
     // =========================================================================
     const State = {
-        /**
-         * Initialize a reactive state bounded to a specific DOM context.
-         * @param {string} rootSelector - The target container (e.g., '#app-form-container')
-         * @param {object} initialData - Default state values
-         * @param {object} methods - Action methods (e.g., save(), delete())
-         * @returns {Proxy} - Reactive proxy object
-         */
         create: function(rootSelector, initialData = {}, methods = {}) {
             const rootEl = document.querySelector(rootSelector);
             if (!rootEl) {
@@ -166,15 +145,12 @@ window.PasCore = (function() {
                 return null;
             }
 
-            // Core engine to parse and update DOM elements when state mutates
             const updateDOM = (state) => {
-                // 1. Update text nodes (pas-text)
                 rootEl.querySelectorAll('[pas-text]').forEach(el => {
                     const key = el.getAttribute('pas-text');
                     if (state[key] !== undefined) el.textContent = state[key];
                 });
 
-                // 2. Update visibility (pas-show) with simple negation support
                 rootEl.querySelectorAll('[pas-show]').forEach(el => {
                     const key = el.getAttribute('pas-show');
                     const isNegated = key.startsWith('!');
@@ -183,7 +159,6 @@ window.PasCore = (function() {
                     el.style.display = condition ? '' : 'none';
                 });
 
-                // 3. Synchronize input values (pas-model: State to DOM)
                 rootEl.querySelectorAll('[pas-model]').forEach(el => {
                     const key = el.getAttribute('pas-model');
                     if (state[key] !== undefined && el.value !== state[key]) {
@@ -196,7 +171,6 @@ window.PasCore = (function() {
                 });
             };
 
-            // Setup Proxy to intercept state changes and trigger DOM updates
             const stateProxy = new Proxy({ ...initialData }, {
                 set: function(target, property, value) {
                     target[property] = value;
@@ -205,18 +179,15 @@ window.PasCore = (function() {
                 }
             });
 
-            // Initialize two-way binding listeners (DOM to State)
             rootEl.querySelectorAll('[pas-model]').forEach(el => {
                 const key = el.getAttribute('pas-model');
                 
-                // Set initial value
                 if (el.type === 'checkbox') {
                     el.checked = !!stateProxy[key];
                 } else {
                     el.value = stateProxy[key] !== undefined ? stateProxy[key] : ''; 
                 }
                 
-                // Listen for changes
                 el.addEventListener('input', (e) => {
                     if (e.target.type === 'checkbox') {
                         stateProxy[key] = e.target.checked;
@@ -226,11 +197,10 @@ window.PasCore = (function() {
                 });
             });
 
-            // Attach click action listeners
             rootEl.querySelectorAll('[pas-click]').forEach(el => {
                 const actionCall = el.getAttribute('pas-click');
-                // Extract clean function name (e.g., "saveApp()" -> "saveApp")
-                const funcName = actionCall.replace(/\(\)/g, '').trim(); 
+                // [FIXED] Safely extract the raw function name even if arguments are present
+                const funcName = actionCall.split('(')[0].trim(); 
                 
                 if (typeof methods[funcName] === 'function') {
                     el.addEventListener('click', (e) => {
@@ -242,13 +212,11 @@ window.PasCore = (function() {
                 }
             });
 
-            // Initial DOM render
             updateDOM(stateProxy);
 
             return stateProxy;
         }
     };
-
 
     // =========================================================================
     // 4. PASCORE.EDITOR (WYSIWYG Integration Wrapper)
@@ -286,12 +254,6 @@ window.PasCore = (function() {
         }
     };
 
-    // Expose Internal WebOS Modules
-    return {
-        Net,
-        UI,
-        State,
-        Editor
-    };
+    return { Net, UI, State, Editor };
 
 })();
