@@ -3,198 +3,292 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PasCore Engine Documentation</title>
-    <!-- Tailwind CSS for styling -->
+    <title>PasCore Engine v1.0.0 - PasPages Core Team</title>
+    <!-- Favicon -->
+    <link rel="icon" href="https://cdn.paspages.com/img/favicon.png">
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- SunEditor CSS/JS for the Editor module to work -->
+    <!-- SunEditor (for the Editor module) -->
     <link href="https://cdn.jsdelivr.net/npm/suneditor@latest/dist/css/suneditor.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/suneditor@latest/dist/suneditor.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        indigo: {
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            900: '#312e81',
+                            950: '#1e1b4b',
+                        }
+                    },
+                    animation: {
+                        'float-slow': 'float 8s ease-in-out infinite',
+                        'float-medium': 'float 6s ease-in-out infinite reverse',
+                        'float-fast': 'float 4s ease-in-out infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0) scale(1)' },
+                            '50%': { transform: 'translateY(-20px) scale(1.05)' },
+                        },
+                        glow: {
+                            '0%': { boxShadow: '0 0 10px rgba(79, 70, 229, 0.2)' },
+                            '100%': { boxShadow: '0 0 25px rgba(79, 70, 229, 0.6)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-        pre { background-color: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; font-size: 0.875rem; }
-        code { font-family: 'Fira Code', monospace; }
-        .sidebar-link { display: block; padding: 0.5rem 1rem; color: #475569; border-radius: 0.375rem; transition: all 0.2s; }
-        .sidebar-link:hover { background-color: #e2e8f0; color: #0f172a; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: #0f172a; /* Fallback */
+            color: #f8fafc;
+        }
+        /* Nebula Background */
+        .nebula-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -2;
+            background: radial-gradient(circle at 20% 30%, rgba(49, 46, 129, 0.4) 0%, transparent 40%),
+                        radial-gradient(circle at 80% 70%, rgba(30, 27, 75, 0.6) 0%, transparent 50%),
+                        linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #020617 100%);
+        }
+        .nebula-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            opacity: 0.5;
+        }
+        /* Glassmorphism */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+        .glass-panel:hover {
+            border-color: rgba(79, 70, 229, 0.4);
+            background: rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+        .code-block {
+            background: #020617;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4f46e5; }
     </style>
 </head>
-<body class="text-slate-800 antialiased flex flex-col md:flex-row h-screen overflow-hidden">
+<body class="relative min-h-screen antialiased selection:bg-indigo-500 selection:text-white">
 
-    <!-- Sidebar -->
-    <aside class="w-full md:w-64 bg-white border-r border-slate-200 h-auto md:h-full overflow-y-auto shrink-0 flex flex-col hidden md:flex">
-        <div class="p-6 border-b border-slate-100">
-            <h1 class="text-2xl font-black text-indigo-600 tracking-tight">PasCore<span class="text-slate-800 text-lg">.js</span></h1>
-            <p class="text-xs text-slate-500 mt-1 uppercase tracking-wider font-semibold">Engine v1.0</p>
+    <!-- Nebula Background & Orbs -->
+    <div class="nebula-bg"></div>
+    <div class="nebula-orb bg-indigo-600 w-96 h-96 top-10 left-10 animate-float-slow"></div>
+    <div class="nebula-orb bg-purple-900 w-[500px] h-[500px] bottom-0 right-20 animate-float-medium"></div>
+    <div class="nebula-orb bg-blue-900 w-64 h-64 top-1/2 left-1/3 animate-float-fast"></div>
+
+    <!-- Navbar -->
+    <nav class="fixed top-0 w-full z-50 glass-panel border-b-0 border-x-0 !rounded-none">
+        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <img src="https://cdn.paspages.com/img/logo-light.png" alt="PasPages Logo" class="h-8">
+                <div class="h-5 w-px bg-white/20 mx-2"></div>
+                <span class="font-bold tracking-wide text-white">PasCore <span class="text-indigo-400 font-light">Engine</span></span>
+            </div>
+            <div class="flex items-center gap-4">
+                <span class="px-3 py-1 rounded-full bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 text-xs font-bold tracking-wider">
+                    v1.0.0
+                </span>
+                <a href="#quickstart" class="hidden sm:block text-sm text-gray-300 hover:text-white transition">Quick Start</a>
+                <a href="#modules" class="hidden sm:block text-sm text-gray-300 hover:text-white transition">Modules</a>
+                <a href="#demo" class="text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-lg transition shadow-[0_0_15px_rgba(79,70,229,0.4)]">
+                    Live Demo
+                </a>
+            </div>
         </div>
-        <nav class="p-4 space-y-1 flex-1">
-            <a href="#overview" class="sidebar-link font-medium">Overview</a>
-            <a href="#module-net" class="sidebar-link font-medium">1. PasCore.Net</a>
-            <a href="#module-ui" class="sidebar-link font-medium">2. PasCore.UI</a>
-            <a href="#module-state" class="sidebar-link font-medium">3. PasCore.State</a>
-            <a href="#module-editor" class="sidebar-link font-medium">4. PasCore.Editor</a>
-            <a href="#live-demo" class="sidebar-link font-medium text-indigo-600 bg-indigo-50 mt-4">Live Demo</a>
-        </nav>
-    </aside>
+    </nav>
 
-    <!-- Main Content -->
-    <main class="flex-1 h-full overflow-y-auto p-6 md:p-12 lg:px-24">
+    <!-- Hero Section -->
+    <main class="pt-32 pb-16 px-6 max-w-7xl mx-auto flex flex-col items-center text-center">
+        <div class="inline-flex items-center justify-center p-4 bg-indigo-500/10 rounded-full mb-6 border border-indigo-500/20 animate-glow">
+            <svg class="w-10 h-10 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.631 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 00-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.448 14.9 14.9 0 01.06-.312m-2.24 2.39a4.493 4.493 0 00-1.757 4.306 4.438 4.438 0 002.946 2.946 4.5 4.5 0 004.306-1.758M16.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"></path>
+            </svg>
+        </div>
         
-        <!-- Header -->
-        <header id="overview" class="mb-12 pb-8 border-b border-slate-200">
-            <h1 class="text-4xl md:text-5xl font-extrabold text-slate-900 mb-4">PasCore Engine</h1>
-            <p class="text-xl text-slate-600 max-w-3xl leading-relaxed">
-                An enterprise-grade, zero-dependency Vanilla JS framework designed specifically for the PasCore Admin Interface. It gracefully replaces Alpine.js and Axios, providing a unified API for networking, UI updates, reactive state, and WYSIWYG editing.
-            </p>
-        </header>
+        <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 text-transparent bg-clip-text bg-gradient-to-r from-white via-indigo-200 to-indigo-400">
+            PasCore Engine
+        </h1>
+        <p class="text-lg md:text-xl text-gray-300 max-w-3xl mb-4 leading-relaxed font-light">
+            The enterprise-grade Vanilla JS framework powering the PasCore Admin Interface. Zero external dependencies. Designed for absolute speed, replacing Alpine.js & Axios entirely.
+        </p>
+        <p class="text-indigo-400 font-medium tracking-wide mb-10">
+            Crafted with precision by the <span class="text-white font-bold">PasPages Core Team</span>.
+        </p>
 
-        <!-- Module 1: Net -->
-        <section id="module-net" class="mb-16 scroll-mt-12">
-            <h2 class="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
-                <span class="bg-indigo-100 text-indigo-600 w-8 h-8 rounded-lg flex items-center justify-center text-sm">1</span>
-                PasCore.Net
-            </h2>
-            <p class="text-slate-600 mb-4">
-                The Networking & API module. It handles HTTP requests, automatically manages JWT tokens, wraps payloads according to PasCore backend standards, and intercepts 401/403 errors to redirect unauthorized users to the login page.
-            </p>
-            <div class="grid md:grid-cols-2 gap-6">
-                <div>
-                    <h3 class="font-semibold text-slate-800 mb-2">Features</h3>
-                    <ul class="list-disc list-inside text-slate-600 space-y-1">
-                        <li>Standardized <code>fetch</code> wrapper.</li>
-                        <li>Auto-injects <code>Authorization: Bearer</code> headers.</li>
-                        <li>Wraps POST/PUT bodies in <code>{ payload: data }</code>.</li>
-                        <li>Guaranteed return structure: <code>{ success, data, message, status }</code>.</li>
-                    </ul>
+        <!-- Quick Start / CDN -->
+        <div id="quickstart" class="w-full max-w-3xl glass-panel rounded-2xl p-1 md:p-2 relative overflow-hidden group">
+            <div class="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition duration-500"></div>
+            <div class="relative code-block rounded-xl p-4 md:p-6 text-left shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="w-full overflow-x-auto">
+                    <p class="text-gray-400 text-xs uppercase tracking-wider mb-2 font-semibold">CDN Installation - v1.0.0</p>
+                    <code class="text-sm font-mono text-gray-300 block whitespace-nowrap">
+                        <span class="text-pink-400">&lt;script</span> 
+                        <span class="text-green-300">src</span>=<span class="text-yellow-200">"https://pascorejs.pages.dev/v/1.0.0.js"</span><span class="text-pink-400">&gt;&lt;/script&gt;</span>
+                    </code>
                 </div>
-                <div>
-                    <h3 class="font-semibold text-slate-800 mb-2">Usage Example</h3>
-<pre><code>// GET Request
-const users = await PasCore.Net.get('/users');
-
-// POST Request (Auto wrapped payload)
-const res = await PasCore.Net.post('/users/create', { 
-    name: 'John' 
-});
-
-if (res.success) {
-    console.log(res.data);
-}</code></pre>
-                </div>
+                <button onclick="navigator.clipboard.writeText('<script src=\'https://pascorejs.pages.dev/v/1.0.0.js\'></script>'); PasCore.UI.toast('success', 'CDN URL copied to clipboard!')" class="shrink-0 bg-white/5 hover:bg-white/10 text-white p-3 rounded-lg border border-white/10 transition flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                </button>
             </div>
-        </section>
+        </div>
+    </main>
 
-        <!-- Module 2: UI -->
-        <section id="module-ui" class="mb-16 scroll-mt-12">
-            <h2 class="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
-                <span class="bg-emerald-100 text-emerald-600 w-8 h-8 rounded-lg flex items-center justify-center text-sm">2</span>
-                PasCore.UI
-            </h2>
-            <p class="text-slate-600 mb-4">
-                DOM Utilities and Notifications. Provides an elegant, animated toast notification system out of the box, falling back to Alpine.js stores if configured, or generating native DOM elements instantly.
-            </p>
-            <div class="bg-white p-6 border border-slate-200 rounded-xl shadow-sm mb-4">
-                <h3 class="font-semibold text-slate-800 mb-4">Try it out:</h3>
-                <div class="flex gap-4">
-                    <button onclick="PasCore.UI.toast('success', 'Data saved successfully!')" class="px-4 py-2 bg-emerald-500 text-white rounded-md shadow hover:bg-emerald-600 transition">Success Toast</button>
-                    <button onclick="PasCore.UI.toast('error', 'Operation failed. Please try again.')" class="px-4 py-2 bg-red-500 text-white rounded-md shadow hover:bg-red-600 transition">Error Toast</button>
-                    <button onclick="PasCore.UI.toast('warning', 'Session is about to expire.')" class="px-4 py-2 bg-amber-500 text-white rounded-md shadow hover:bg-amber-600 transition">Warning Toast</button>
+    <!-- Modules Section -->
+    <section id="modules" class="py-16 px-6 max-w-7xl mx-auto">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-white mb-4">Four Pillars of PasCore</h2>
+            <p class="text-gray-400 max-w-2xl mx-auto">A unified API for networking, UI updates, reactive state management, and WYSIWYG editing.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Net Module -->
+            <div class="glass-panel p-8 rounded-2xl">
+                <div class="w-12 h-12 bg-indigo-500/20 text-indigo-400 rounded-xl flex items-center justify-center mb-6 border border-indigo-500/30">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                 </div>
+                <h3 class="text-xl font-bold text-white mb-3">1. PasCore.Net</h3>
+                <p class="text-gray-400 text-sm leading-relaxed mb-4">
+                    Advanced networking & API module. Automatically manages JWT tokens, standardizes backend payload wrapping, and gracefully intercepts 401/403 errors to handle session expiries.
+                </p>
             </div>
-<pre><code>// Syntax
-PasCore.UI.toast('success', 'Settings updated successfully!');
-PasCore.UI.toast('error', 'Network error occurred.');</code></pre>
-        </section>
 
-        <!-- Module 3: State -->
-        <section id="module-state" class="mb-16 scroll-mt-12">
-            <h2 class="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
-                <span class="bg-blue-100 text-blue-600 w-8 h-8 rounded-lg flex items-center justify-center text-sm">3</span>
-                PasCore.State
-            </h2>
-            <p class="text-slate-600 mb-4">
-                The Alpine.js alternative. A lightweight reactive engine utilizing JavaScript Proxies. It binds your data model to the DOM and automatically updates elements when variables change.
-            </p>
+            <!-- UI Module -->
+            <div class="glass-panel p-8 rounded-2xl">
+                <div class="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-xl flex items-center justify-center mb-6 border border-emerald-500/30">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-3">2. PasCore.UI</h3>
+                <p class="text-gray-400 text-sm leading-relaxed mb-4">
+                    DOM utilities and elegant notifications. Generates native animated DOM toasts instantly, providing a seamless feedback loop for user actions without any bulky libraries.
+                </p>
+            </div>
+
+            <!-- State Module -->
+            <div class="glass-panel p-8 rounded-2xl">
+                <div class="w-12 h-12 bg-pink-500/20 text-pink-400 rounded-xl flex items-center justify-center mb-6 border border-pink-500/30">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-3">3. PasCore.State</h3>
+                <p class="text-gray-400 text-sm leading-relaxed mb-4">
+                    The Alpine.js killer. A high-performance reactive engine powered by JS Proxies. Use <code class="text-pink-300">pas-model</code>, <code class="text-pink-300">pas-text</code>, and <code class="text-pink-300">pas-click</code> for true two-way data binding.
+                </p>
+            </div>
+
+            <!-- Editor Module -->
+            <div class="glass-panel p-8 rounded-2xl">
+                <div class="w-12 h-12 bg-blue-500/20 text-blue-400 rounded-xl flex items-center justify-center mb-6 border border-blue-500/30">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-3">4. PasCore.Editor</h3>
+                <p class="text-gray-400 text-sm leading-relaxed mb-4">
+                    Enterprise WYSIWYG integration. Provides a unified wrapper around SunEditor, configuring standard toolbar options instantly for content management systems.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Live Demo Section -->
+    <section id="demo" class="py-16 px-6 max-w-7xl mx-auto mb-20">
+        <div class="glass-panel border-indigo-500/30 p-1 rounded-3xl relative overflow-hidden shadow-[0_0_40px_rgba(79,70,229,0.15)]">
+            <div class="absolute inset-0 bg-gradient-to-br from-indigo-600/10 via-transparent to-purple-600/10"></div>
             
-            <div class="grid md:grid-cols-2 gap-6 mb-6">
-                <div>
-                    <h3 class="font-semibold text-slate-800 mb-2">Directives</h3>
-                    <ul class="space-y-3 text-sm text-slate-600">
-                        <li><code class="bg-slate-100 text-pink-600 px-1 py-0.5 rounded">pas-model="key"</code> Two-way data binding for inputs.</li>
-                        <li><code class="bg-slate-100 text-pink-600 px-1 py-0.5 rounded">pas-text="key"</code> Renders text content dynamically.</li>
-                        <li><code class="bg-slate-100 text-pink-600 px-1 py-0.5 rounded">pas-show="key"</code> Toggles display (supports <code>!key</code> negation).</li>
-                        <li><code class="bg-slate-100 text-pink-600 px-1 py-0.5 rounded">pas-click="method()"</code> Binds click events to defined methods.</li>
-                    </ul>
-                </div>
-                <div>
-                    <h3 class="font-semibold text-slate-800 mb-2">Initialization</h3>
-<pre><code>const appState = PasCore.State.create(
-    '#app', 
-    { name: 'John Doe', isLoading: false }, // initial data
-    {
-        save: function(state, event) {
-            state.isLoading = true;
-            // API call...
-        }
-    }
-);</code></pre>
-                </div>
-            </div>
-        </section>
-
-        <!-- Module 4: Editor -->
-        <section id="module-editor" class="mb-16 scroll-mt-12">
-            <h2 class="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
-                <span class="bg-purple-100 text-purple-600 w-8 h-8 rounded-lg flex items-center justify-center text-sm">4</span>
-                PasCore.Editor
-            </h2>
-            <p class="text-slate-600 mb-4">
-                A seamless wrapper for integrating SunEditor (a robust WYSIWYG editor). It sets up the editor with a predefined toolbar tailored for enterprise content management.
-            </p>
-<pre><code>// Initializes editor on a textarea with ID 'content-editor'
-const editor = PasCore.Editor.init(
-    'content-editor', 
-    '<p>Initial HTML content</p>', 
-    (content) => { console.log("Content changed:", content); }
-);</code></pre>
-        </section>
-
-
-        <!-- Live Demo Section -->
-        <section id="live-demo" class="mb-24 p-8 bg-indigo-50 border border-indigo-100 rounded-2xl scroll-mt-12">
-            <h2 class="text-2xl font-bold text-indigo-900 mb-4">Interactive Demo (PasCore.State)</h2>
-            <p class="text-indigo-700 mb-6">This form is powered completely by the inline <code>pascore.js</code> script. Try typing in the field or toggling the visibility.</p>
-            
-            <div id="demo-app" class="bg-white p-6 rounded-xl shadow-sm border border-indigo-100 max-w-lg">
-                
-                <div class="mb-4">
-                    <label class="block text-sm font-semibold text-slate-700 mb-1">Your Name</label>
-                    <!-- pas-model -->
-                    <input pas-model="username" type="text" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            <div class="relative bg-[#0b1120]/80 rounded-[22px] p-8 md:p-12">
+                <div class="mb-10 text-center">
+                    <h2 class="text-3xl font-extrabold text-white mb-2 flex items-center justify-center gap-3">
+                        Interactive Demo !
+                    </h2>
+                    <p class="text-indigo-300">Experience <code class="text-white">PasCore.State</code> & <code class="text-white">PasCore.UI</code> in action.</p>
                 </div>
 
-                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 mb-4">
-                    <!-- pas-text -->
-                    <p class="text-lg">Hello, <strong class="text-indigo-600" pas-text="username"></strong>!</p>
-                </div>
+                <!-- Demo Application Wrapper -->
+                <div id="pascore-demo-app" class="max-w-xl mx-auto">
+                    
+                    <!-- Input Section -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Transmission Message (Two-way binding)</label>
+                        <div class="relative">
+                            <!-- pas-model directive -->
+                            <input pas-model="transmission" type="text" class="w-full bg-[#020617] border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition shadow-inner" placeholder="Enter a message to broadcast...">
+                            
+                            <div class="absolute right-3 top-3 text-indigo-500/50">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            </div>
+                        </div>
+                        <p class="mt-2 text-xs text-gray-500">Edit the text above to see <code class="text-indigo-400">pas-text</code> react instantly.</p>
+                    </div>
 
-                <div class="flex items-center justify-between">
-                    <div class="flex gap-2">
-                        <!-- pas-click -->
-                        <button pas-click="sayHello()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition">Greet Me</button>
-                        <button pas-click="toggleSecret()" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition">Toggle Secret</button>
+                    <!-- Output Section -->
+                    <div class="glass-panel rounded-xl p-6 mb-8 border border-indigo-500/20 text-center">
+                        <p class="text-sm text-gray-400 mb-2 uppercase tracking-widest font-semibold">Live Preview</p>
+                        <!-- pas-text directive -->
+                        <h3 class="text-2xl font-bold text-white min-h-[32px] break-words" pas-text="transmission"></h3>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <!-- pas-click directive -->
+                        <button pas-click="broadcast()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 px-4 rounded-xl transition shadow-[0_0_15px_rgba(79,70,229,0.3)] border border-indigo-400/30 flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
+                            Send Broadcast
+                        </button>
+                        <button pas-click="triggerError()" class="w-full bg-red-500/10 hover:bg-red-500/20 text-red-400 font-semibold py-3 px-4 rounded-xl transition border border-red-500/30 flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            Test Error UI
+                        </button>
+                    </div>
+
+                    <!-- pas-show directive -->
+                    <div pas-show="isBroadcasting" class="mt-6 text-center text-indigo-400 text-sm animate-pulse" style="display: none;">
+                        📡 Transmitting to deep space...
                     </div>
                 </div>
 
-                <!-- pas-show -->
-                <div pas-show="showSecret" class="mt-6 p-4 bg-amber-50 text-amber-800 border border-amber-200 rounded-lg text-sm font-medium" style="display: none;">
-                    🚀 Secret message unlocked! The proxy reactive engine is working perfectly.
-                </div>
-
             </div>
-        </section>
+        </div>
+    </section>
 
-    </main>
+    <!-- Footer -->
+    <footer class="border-t border-white/10 bg-black/20 backdrop-blur-md mt-auto">
+        <div class="max-w-7xl mx-auto px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2">
+                <img src="https://cdn.paspages.com/img/logo-light.png" alt="PasPages Logo" class="h-6 grayscale opacity-70">
+            </div>
+            <p class="text-gray-500 text-sm text-center md:text-left">
+                &copy; 2026 PasPages Core Team. All systems operational.
+            </p>
+            <div class="text-sm text-gray-500 font-mono">
+                PasCore Engine v1.0.0
+            </div>
+        </div>
+    </footer>
 
-    <!-- INJECTING THE ACTUAL PASCORE.JS CODE PROVIDED IN THE PROMPT -->
+    <!-- ========================================== -->
+    <!-- PASCORE ENGINE SOURCE CODE INJECTION       -->
+    <!-- ========================================== -->
     <script>
         /**
          * PASCORE ENGINE (pascore.js)
@@ -204,45 +298,84 @@ const editor = PasCore.Editor.init(
         window.PasCore = (function() {
             'use strict';
 
-            // 1. PASCORE.NET
+            // =========================================================================
+            // 1. PASCORE.NET (Networking & API Module)
+            // =========================================================================
             const Net = {
-                config: { apiPrefix: '/api/dev-pasapp', tokenKey: 'paspages_jwt' },
-                _getToken: function() { return localStorage.getItem(this.config.tokenKey) || localStorage.getItem('paspages_token'); },
+                config: {
+                    apiPrefix: '/api/dev-pasapp', // Bisa diganti dinamis sesuai plugin aktif
+                    tokenKey: 'paspages_jwt'
+                },
+
+                _getToken: function() {
+                    return localStorage.getItem(this.config.tokenKey) || localStorage.getItem('paspages_token');
+                },
+
                 request: async function(endpoint, method = 'GET', data = null, wrapPayload = true) {
                     const url = endpoint.startsWith('http') ? endpoint : `${this.config.apiPrefix}${endpoint}`;
                     const token = this._getToken();
-                    const options = { method: method.toUpperCase(), headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' } };
-                    if (token) options.headers['Authorization'] = `Bearer ${token}`;
+                    
+                    const options = {
+                        method: method.toUpperCase(),
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        }
+                    };
+
+                    if (token) {
+                        options.headers['Authorization'] = `Bearer ${token}`;
+                    }
+
                     if (data && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(options.method)) {
+                        // Sesuai standar PasCore Backend: data dibungkus dalam { payload: ... }
                         options.body = JSON.stringify(wrapPayload ? { payload: data } : data);
                     }
+
                     try {
                         const response = await fetch(url, options);
+                        
+                        // Cek jika token expired atau user tidak punya akses
                         if (response.status === 401 || response.status === 403) {
                             console.error('[PasCore.Net] Unauthorized. Session expired.');
                             PasCore.UI.toast('error', 'Sesi Anda telah berakhir. Silakan login kembali.');
+                            setTimeout(() => window.location.href = '/admin/login', 1500);
                             return { success: false, message: 'Unauthorized' };
                         }
+
                         const result = await response.json();
-                        return { success: response.ok && result.success !== false, data: result.data || result, message: result.message || (response.ok ? 'Operation successful' : 'Operation failed'), status: response.status };
+                        
+                        // Menstandarkan output kembalian (selalu ada success, data, message)
+                        return {
+                            success: response.ok && result.success !== false,
+                            data: result.data || result,
+                            message: result.message || (response.ok ? 'Operation successful' : 'Operation failed'),
+                            status: response.status
+                        };
                     } catch (error) {
                         console.error(`[PasCore.Net] Fetch Error (${url}):`, error);
                         return { success: false, data: null, message: 'Network connection failed.', status: 0 };
                     }
                 },
+
                 get: function(endpoint) { return this.request(endpoint, 'GET'); },
                 post: function(endpoint, data, wrap = true) { return this.request(endpoint, 'POST', data, wrap); },
                 put: function(endpoint, data, wrap = true) { return this.request(endpoint, 'PUT', data, wrap); },
                 del: function(endpoint, data, wrap = true) { return this.request(endpoint, 'DELETE', data, wrap); }
             };
 
-            // 2. PASCORE.UI
+
+            // =========================================================================
+            // 2. PASCORE.UI (DOM Utilities & Notifications)
+            // =========================================================================
             const UI = {
                 toast: function(type, message) {
+                    // Jika ada sistem Alpine toast lama, gunakan. Jika tidak, buat native DOM Toast.
                     if (window.Alpine && window.Alpine.store('toast')) {
                         window.Alpine.store('toast').show(type, message);
                         return;
                     }
+
                     let container = document.getElementById('pascore-toast-container');
                     if (!container) {
                         container = document.createElement('div');
@@ -250,16 +383,30 @@ const editor = PasCore.Editor.init(
                         container.className = 'fixed bottom-6 right-6 z-[9999] flex flex-col gap-2';
                         document.body.appendChild(container);
                     }
+
                     const toast = document.createElement('div');
-                    const bgClass = type === 'success' ? 'bg-white border-emerald-200 text-slate-800' : 
-                                    (type === 'error' ? 'bg-red-50 border-red-200 text-red-800' : 'bg-amber-50 border-amber-200 text-amber-800');
-                    toast.className = `flex items-center gap-3 px-6 py-4 rounded-xl shadow-2xl border transition-all transform translate-y-10 opacity-0 duration-300 ${bgClass}`;
-                    toast.innerHTML = `<span class="font-bold text-sm pr-4">${message}</span>`;
+                    
+                    // Dark Mode UI Toasts adapting to the theme
+                    const bgClass = type === 'success' ? 'bg-[#0f172a] border-emerald-500/50 text-emerald-400' : 
+                                    (type === 'error' ? 'bg-[#0f172a] border-red-500/50 text-red-400' : 'bg-[#0f172a] border-amber-500/50 text-amber-400');
+                    
+                    toast.className = `flex items-center gap-3 px-6 py-4 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] border transition-all transform translate-y-10 opacity-0 duration-300 ${bgClass} backdrop-blur-md`;
+                    
+                    // Add SVG Icon based on type
+                    const icon = type === 'success' ? '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>' : 
+                                 (type === 'error' ? '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>' : '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>');
+
+                    toast.innerHTML = `${icon} <span class="font-bold text-sm pr-4">${message}</span>`;
+                    
                     container.appendChild(toast);
+                    
+                    // Animasi masuk
                     requestAnimationFrame(() => {
                         toast.classList.remove('translate-y-10', 'opacity-0');
                         toast.classList.add('translate-y-0', 'opacity-100');
                     });
+
+                    // Auto hapus
                     setTimeout(() => {
                         toast.classList.remove('translate-y-0', 'opacity-100');
                         toast.classList.add('translate-y-10', 'opacity-0');
@@ -268,103 +415,167 @@ const editor = PasCore.Editor.init(
                 }
             };
 
-            // 3. PASCORE.STATE
+
+            // =========================================================================
+            // 3. PASCORE.STATE (Reactive Engine - Alpine.js Alternative)
+            // =========================================================================
             const State = {
                 create: function(rootSelector, initialData = {}, methods = {}) {
                     const rootEl = document.querySelector(rootSelector);
-                    if (!rootEl) { console.warn(`[PasCore.State] Root element ${rootSelector} not found.`); return null; }
-                    
+                    if (!rootEl) {
+                        console.warn(`[PasCore.State] Root element ${rootSelector} not found.`);
+                        return null;
+                    }
+
+                    // Fungsi inti untuk mengupdate DOM jika State berubah
                     const updateDOM = (state) => {
+                        // 1. Update pas-text (mirip x-text)
                         rootEl.querySelectorAll('[pas-text]').forEach(el => {
                             const key = el.getAttribute('pas-text');
                             if (state[key] !== undefined) el.textContent = state[key];
                         });
+
+                        // 2. Update pas-show (mirip x-show)
                         rootEl.querySelectorAll('[pas-show]').forEach(el => {
                             const key = el.getAttribute('pas-show');
+                            // Dukungan sederhana untuk negasi, misal pas-show="!isLoading"
                             const isNegated = key.startsWith('!');
                             const cleanKey = isNegated ? key.substring(1) : key;
                             const condition = isNegated ? !state[cleanKey] : !!state[cleanKey];
                             el.style.display = condition ? '' : 'none';
                         });
+
+                        // 3. Update pas-model (Sinkronisasi State ke Input)
                         rootEl.querySelectorAll('[pas-model]').forEach(el => {
                             const key = el.getAttribute('pas-model');
-                            if (state[key] !== undefined && el.value !== state[key]) el.value = state[key];
+                            if (state[key] !== undefined && el.value !== state[key]) {
+                                el.value = state[key];
+                            }
                         });
                     };
 
+                    // Membuat Proxy: Memantau setiap kali script mengubah data (misal state.isLoading = true)
                     const stateProxy = new Proxy({ ...initialData }, {
                         set: function(target, property, value) {
                             target[property] = value;
-                            updateDOM(target);
+                            updateDOM(target); // Render ulang DOM setiap ada perubahan
                             return true;
                         }
                     });
 
+                    // Inisialisasi: Pasang Event Listener (Input -> State)
                     rootEl.querySelectorAll('[pas-model]').forEach(el => {
                         const key = el.getAttribute('pas-model');
-                        el.value = stateProxy[key] || '';
-                        el.addEventListener('input', (e) => { stateProxy[key] = e.target.value; });
+                        el.value = stateProxy[key] || ''; // Set nilai awal
+                        
+                        el.addEventListener('input', (e) => {
+                            stateProxy[key] = e.target.value;
+                        });
                     });
 
+                    // Inisialisasi: Pasang Event Listener Aksi (pas-click)
                     rootEl.querySelectorAll('[pas-click]').forEach(el => {
                         const actionCall = el.getAttribute('pas-click');
+                        // Mengambil nama fungsi (contoh: "saveApp()" -> "saveApp")
                         const funcName = actionCall.replace(/\(\)/g, '').trim(); 
+                        
                         if (typeof methods[funcName] === 'function') {
                             el.addEventListener('click', (e) => {
                                 e.preventDefault();
                                 methods[funcName].call(methods, stateProxy, e);
                             });
+                        } else {
+                            console.warn(`[PasCore.State] Method '${funcName}' not defined.`);
                         }
                     });
 
+                    // Render DOM untuk pertama kalinya
                     updateDOM(stateProxy);
-                    return stateProxy;
+
+                    return stateProxy; // Kembalikan proxy agar bisa diakses oleh dev
                 }
             };
 
-            // 4. PASCORE.EDITOR
+
+            // =========================================================================
+            // 4. PASCORE.EDITOR (WYSIWYG Integration Wrapper)
+            // =========================================================================
             const Editor = {
                 init: function(elementId, initialContent = '', onChangeCallback = null) {
                     const targetEl = document.getElementById(elementId);
                     if (!targetEl) return null;
-                    if (typeof SUNEDITOR === 'undefined') return null;
+
+                    if (typeof SUNEDITOR === 'undefined') {
+                        console.error('[PasCore.Editor] SunEditor library is missing.');
+                        return null;
+                    }
+
                     const editorInstance = SUNEDITOR.create(targetEl, {
                         plugins: SUNEDITOR.plugins,
                         height: '300px',
                         value: initialContent,
-                        buttonList: [['undo', 'redo'], ['formatBlock'], ['bold', 'underline', 'italic', 'strike'], ['fontColor', 'hiliteColor'], ['align', 'list', 'lineHeight'], ['link', 'image', 'video'], ['fullScreen', 'showBlocks', 'codeView']]
+                        buttonList: [
+                            ['undo', 'redo'],
+                            ['formatBlock'],
+                            ['bold', 'underline', 'italic', 'strike'],
+                            ['fontColor', 'hiliteColor'],
+                            ['align', 'list', 'lineHeight'],
+                            ['link', 'image', 'video'],
+                            ['fullScreen', 'showBlocks', 'codeView']
+                        ]
                     });
-                    if (onChangeCallback) editorInstance.onChange = onChangeCallback;
+
+                    if (onChangeCallback) {
+                        editorInstance.onChange = onChangeCallback;
+                    }
+
                     return editorInstance;
                 }
             };
 
-            return { Net, UI, State, Editor };
+            // Expose Module
+            return {
+                Net,
+                UI,
+                State,
+                Editor
+            };
+
         })();
     </script>
 
-    <!-- INITIALIZE THE DEMO -->
+    <!-- ========================================== -->
+    <!-- DEMO INITIALIZATION SCRIPT                 -->
+    <!-- ========================================== -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Create the state for our live demo
-            PasCore.State.create('#demo-app', 
-                { 
-                    username: 'Administrator',
-                    showSecret: false 
-                }, 
+            // Initialize the Demo App using PasCore.State
+            PasCore.State.create('#pascore-demo-app', 
                 {
-                    sayHello: function(state) {
-                        if (!state.username.trim()) {
-                            PasCore.UI.toast('error', 'Please enter a name first!');
+                    // Initial State Data
+                    transmission: 'Hello from PasPages Core Team!',
+                    isBroadcasting: false
+                },
+                {
+                    // Methods bounded to pas-click
+                    broadcast: function(state) {
+                        if (!state.transmission.trim()) {
+                            PasCore.UI.toast('warning', 'Cannot transmit empty signal.');
                             return;
                         }
-                        PasCore.UI.toast('success', `Welcome back, ${state.username}!`);
+                        
+                        // Toggle UI elements
+                        state.isBroadcasting = true;
+                        
+                        // Simulate network delay
+                        setTimeout(() => {
+                            PasCore.UI.toast('success', `Broadcast successful: "${state.transmission}"`);
+                            state.isBroadcasting = false;
+                        }, 1200);
                     },
-                    toggleSecret: function(state) {
-                        state.showSecret = !state.showSecret;
-                        if(state.showSecret) {
-                            PasCore.UI.toast('warning', 'Secret area revealed.');
-                        }
+
+                    triggerError: function(state) {
+                        PasCore.UI.toast('error', 'Connection to the mothership lost. Re-establishing link...');
                     }
                 }
             );
