@@ -1,18 +1,17 @@
 /**
  * PASCORE ENGINE (pascore.js)
  * Internal WebOS Framework for PasPages.
- * Lightweight, zero-dependency Vanilla JS engine replacing Alpine.js & Axios.
+ * Lightweight, zero-dependency Vanilla JS engine.
  */
 
 window.PasCore = (function() {
     'use strict';
 
     // =========================================================================
-    // 1. PASCORE.NET (Networking & API Module)
+    // 1. PASCORE.NET (Networking & Context-Aware API Module)
     // =========================================================================
     const Net = {
         config: {
-            apiPrefix: '/api/dev-pasapp', // Can be dynamically updated based on the active plugin
             tokenKey: 'paspages_jwt'
         },
 
@@ -21,9 +20,32 @@ window.PasCore = (function() {
         },
 
         request: async function(endpoint, method = 'GET', data = null, wrapPayload = true) {
-            const url = endpoint.startsWith('http') ? endpoint : `${this.config.apiPrefix}${endpoint}`;
+            let url = endpoint;
+
+            // CONTEXT-AWARE ROUTING
+            // Automatically determine the correct API path if a relative path is provided
+            if (!endpoint.startsWith('http') && !endpoint.startsWith('/api/')) {
+                
+                // Clean up accidental '/admin/' prefixes passed by developers
+                let cleanPath = endpoint;
+                if (cleanPath.startsWith('/admin/')) {
+                    cleanPath = cleanPath.replace('/admin', '');
+                }
+                if (!cleanPath.startsWith('/')) cleanPath = '/' + cleanPath;
+                
+                // Detect if the script is running inside a Plugin UI boundary
+                const pluginUI = document.querySelector('.plugin-custom-ui');
+                
+                if (pluginUI) {
+                    const ns = pluginUI.getAttribute('data-active-namespace');
+                    url = `/api/${ns}${cleanPath}`;
+                } else {
+                    // Running inside Core Admin System
+                    url = `/api/admin${cleanPath}`;
+                }
+            }
+
             const token = this._getToken();
-            
             const options = {
                 method: method.toUpperCase(),
                 headers: {
@@ -52,7 +74,15 @@ window.PasCore = (function() {
                     return { success: false, message: 'Unauthorized' };
                 }
 
-                const result = await response.json();
+                // Handle non-JSON or empty responses gracefully
+                const contentType = response.headers.get("content-type");
+                let result = {};
+                if (contentType && contentType.includes("application/json")) {
+                    result = await response.json();
+                } else {
+                    const textData = await response.text();
+                    result = { success: response.ok, message: textData };
+                }
                 
                 // Standardize the return payload
                 return {
@@ -157,7 +187,11 @@ window.PasCore = (function() {
                 rootEl.querySelectorAll('[pas-model]').forEach(el => {
                     const key = el.getAttribute('pas-model');
                     if (state[key] !== undefined && el.value !== state[key]) {
-                        el.value = state[key];
+                        if (el.type === 'checkbox') {
+                            el.checked = !!state[key];
+                        } else {
+                            el.value = state[key];
+                        }
                     }
                 });
             };
@@ -174,10 +208,21 @@ window.PasCore = (function() {
             // Initialize two-way binding listeners (DOM to State)
             rootEl.querySelectorAll('[pas-model]').forEach(el => {
                 const key = el.getAttribute('pas-model');
-                el.value = stateProxy[key] || ''; 
                 
+                // Set initial value
+                if (el.type === 'checkbox') {
+                    el.checked = !!stateProxy[key];
+                } else {
+                    el.value = stateProxy[key] !== undefined ? stateProxy[key] : ''; 
+                }
+                
+                // Listen for changes
                 el.addEventListener('input', (e) => {
-                    stateProxy[key] = e.target.value;
+                    if (e.target.type === 'checkbox') {
+                        stateProxy[key] = e.target.checked;
+                    } else {
+                        stateProxy[key] = e.target.value;
+                    }
                 });
             });
 
