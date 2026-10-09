@@ -215,25 +215,35 @@ window.PasCore = (function() {
     const State = {
         create: function(rootSelector, initialData = {}, methods = {}) {
             const rootEl = document.querySelector(rootSelector);
-            if (!rootEl) return null;
+            if (!rootEl) {
+                console.warn(`[PasCore.State] Root element ${rootSelector} not found.`);
+                return null;
+            }
+
+            // Smart evaluator function to translate strings into JavaScript logic
+            const evaluate = (expr, state) => {
+                try {
+                    return new Function('state', `with(state) { return ${expr}; }`)(state);
+                } catch(e) {
+                    console.error(`[PasCore.State] Expression error on "${expr}":`, e);
+                    return undefined;
+                }
+            };
 
             const updateDOM = (state) => {
-                // 1. Text Content Binding (pas-text)
+                // 1. Text Content Binding (Supports expressions, e.g., pas-text="count + 1")
                 rootEl.querySelectorAll('[pas-text]').forEach(el => {
-                    const key = el.getAttribute('pas-text');
-                    if (state[key] !== undefined) el.textContent = state[key];
+                    const val = evaluate(el.getAttribute('pas-text'), state);
+                    if (val !== undefined) el.textContent = val;
                 });
 
-                // 2. Visibility Binding (pas-show)
+                // 2. Visibility Binding (Supports comparisons, e.g., pas-show="tab === 'apps'")
                 rootEl.querySelectorAll('[pas-show]').forEach(el => {
-                    const key = el.getAttribute('pas-show');
-                    const isNegated = key.startsWith('!');
-                    const cleanKey = isNegated ? key.substring(1) : key;
-                    const condition = isNegated ? !state[cleanKey] : !!state[cleanKey];
+                    const condition = evaluate(el.getAttribute('pas-show'), state);
                     el.style.display = condition ? '' : 'none';
                 });
 
-                // 3. Input Value Binding (pas-model)
+                // 3. Input Value Binding (Requires direct-key for Two-Way Binding)
                 rootEl.querySelectorAll('[pas-model]').forEach(el => {
                     const key = el.getAttribute('pas-model');
                     if (state[key] !== undefined && el.value !== String(state[key])) {
@@ -242,17 +252,15 @@ window.PasCore = (function() {
                     }
                 });
 
-                // 4. Dynamic Attribute Binding (pas-bind:attr)
+                // 4. Dynamic Attribute Binding (Supports negation, e.g., pas-bind:disabled="!isReady")
                 rootEl.querySelectorAll('*').forEach(el => {
                     Array.from(el.attributes).forEach(attr => {
                         if (attr.name.startsWith('pas-bind:')) {
                             const targetAttr = attr.name.split(':')[1];
-                            const stateKey = attr.value;
-                            const val = state[stateKey];
+                            const val = evaluate(attr.value, state);
 
                             if (val) {
                                 el.setAttribute(targetAttr, val === true ? targetAttr : val);
-                                // Handle boolean DOM properties explicitly (e.g., 'disabled', 'checked')
                                 if (val === true) el[targetAttr] = true; 
                             } else {
                                 el.removeAttribute(targetAttr);
@@ -262,26 +270,17 @@ window.PasCore = (function() {
                     });
                 });
 
-                // 5. Conditional CSS Class Binding (pas-class="{'class-name': condition}")
+                // 5. Conditional CSS Class Binding
                 rootEl.querySelectorAll('[pas-class]').forEach(el => {
-                    try {
-                        const classString = el.getAttribute('pas-class');
-                        // Safe evaluation using the Function constructor for object-like syntax
-                        const evaluator = new Function('state', `with(state) { return ${classString}; }`);
-                        const classObj = evaluator(state);
-                        
-                        for (let cls in classObj) {
-                            const classes = cls.split(' ').filter(Boolean);
-                            if (classObj[cls]) el.classList.add(...classes);
-                            else el.classList.remove(...classes);
-                        }
-                    } catch (e) {
-                        console.error('[PasCore.State] Error parsing pas-class expression:', e);
+                    const classObj = evaluate(el.getAttribute('pas-class'), state) || {};
+                    for (let cls in classObj) {
+                        const classes = cls.split(' ').filter(Boolean);
+                        if (classObj[cls]) el.classList.add(...classes);
+                        else el.classList.remove(...classes);
                     }
                 });
             };
 
-            // Wrap state object in a Proxy to detect mutations
             const stateProxy = new Proxy({ ...initialData }, {
                 set: function(target, property, value) {
                     target[property] = value;
@@ -290,7 +289,7 @@ window.PasCore = (function() {
                 }
             });
 
-            // Initialize Two-Way Data Binding for Inputs
+            // Init Two-Way Data Binding for Inputs
             rootEl.querySelectorAll('[pas-model]').forEach(el => {
                 const key = el.getAttribute('pas-model');
                 if (el.type === 'checkbox') el.checked = !!stateProxy[key];
@@ -302,7 +301,7 @@ window.PasCore = (function() {
                 });
             });
 
-            // Initialize Event Listeners (pas-click & pas-on:event)
+            // Init Event Listeners
             rootEl.querySelectorAll('*').forEach(el => {
                 Array.from(el.attributes).forEach(attr => {
                     let isEvent = false;
@@ -317,12 +316,9 @@ window.PasCore = (function() {
                     }
 
                     if (isEvent) {
-                        const actionCall = attr.value;
-                        const funcName = actionCall.split('(')[0].trim(); 
-                        
+                        const funcName = attr.value.split('(')[0].trim(); 
                         if (typeof methods[funcName] === 'function') {
                             el.addEventListener(eventType, (e) => {
-                                // Prevent default behavior for specific tags or submit events
                                 if (eventType === 'submit' || el.tagName === 'A') e.preventDefault();
                                 methods[funcName].call(methods, stateProxy, e);
                             });
@@ -331,7 +327,6 @@ window.PasCore = (function() {
                 });
             });
 
-            // Trigger initial DOM render
             updateDOM(stateProxy);
             return stateProxy;
         }
