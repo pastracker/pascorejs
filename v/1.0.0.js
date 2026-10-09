@@ -19,7 +19,7 @@ window.PasCore = (function() {
             return localStorage.getItem(this.config.tokenKey) || localStorage.getItem('paspages_token');
         },
 
-        request: async function(endpoint, method = 'GET', data = null, wrapPayload = true) {
+        request: async function(endpoint, method = 'GET', data = null) {
             let url = endpoint;
 
             if (!endpoint.startsWith('http') && !endpoint.startsWith('/api/')) {
@@ -47,8 +47,9 @@ window.PasCore = (function() {
 
             if (token) options.headers['Authorization'] = `Bearer ${token}`;
 
+            // [FIXED] Mengirim JSON secara datar (flat), persis seperti struktur pp_posts
             if (data && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(options.method)) {
-                options.body = JSON.stringify(wrapPayload ? { payload: data } : data);
+                options.body = JSON.stringify(data);
             }
 
             try {
@@ -83,13 +84,13 @@ window.PasCore = (function() {
         },
 
         get: function(endpoint) { return this.request(endpoint, 'GET'); },
-        post: function(endpoint, data, wrap = true) { return this.request(endpoint, 'POST', data, wrap); },
-        put: function(endpoint, data, wrap = true) { return this.request(endpoint, 'PUT', data, wrap); },
-        del: function(endpoint, data, wrap = true) { return this.request(endpoint, 'DELETE', data, wrap); }
+        post: function(endpoint, data) { return this.request(endpoint, 'POST', data); },
+        put: function(endpoint, data) { return this.request(endpoint, 'PUT', data); },
+        del: function(endpoint, data) { return this.request(endpoint, 'DELETE', data); }
     };
 
     // =========================================================================
-    // 2. PASCORE.UI (DOM Utilities & Notifications)
+    // 2. PASCORE.UI (DOM Utilities)
     // =========================================================================
     const UI = {
         toast: function(type, message) {
@@ -129,7 +130,7 @@ window.PasCore = (function() {
     };
 
     // =========================================================================
-    // 3. PASCORE.STATE (Reactive Engine - WebOS Core)
+    // 3. PASCORE.STATE (Reactive Engine)
     // =========================================================================
     const State = {
         create: function(rootSelector, initialData = {}, methods = {}) {
@@ -196,15 +197,15 @@ window.PasCore = (function() {
     };
 
     // =========================================================================
-    // 4. PASCORE.EDITOR (Quill.js Integration Wrapper)
+    // 4. PASCORE.EDITOR (Quill Real-Time Integration)
     // =========================================================================
     const Editor = {
-        init: function(elementId, initialContent = '') {
+        init: function(elementId, initialContent = '', onChangeCallback = null) {
             const targetEl = document.getElementById(elementId);
             if (!targetEl) return null;
 
             if (typeof window.Quill === 'undefined') {
-                console.error('[PasCore.Editor] Quill library is missing. Make sure CDN is loaded.');
+                console.error('[PasCore.Editor] Quill library is missing.');
                 return null;
             }
 
@@ -214,31 +215,26 @@ window.PasCore = (function() {
                     toolbar: [
                         [{ 'header': [1, 2, 3, false] }],
                         ['bold', 'italic', 'underline', 'strike'],
-                        [{ 'color': [] }, { 'background': [] }],
                         [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                        [{ 'align': [] }],
                         ['link', 'image', 'video', 'code-block'],
                         ['clean']
                     ]
                 }
             });
 
-            // Set Initial Content
+            // Set Content
             if (initialContent) {
                 quill.clipboard.dangerouslyPasteHTML(initialContent);
             }
 
-            // Return a standardized PasCore Interface so the plugin logic remains clean
-            return {
-                instance: quill,
-                getContents: function() {
-                    const html = quill.root.innerHTML;
-                    return html === '<p><br></p>' ? '' : html;
-                },
-                setContents: function(html) {
-                    quill.clipboard.dangerouslyPasteHTML(html || '');
-                }
-            };
+            // [FIXED] Sync Real-time ke State, persis seperti metode di pp_posts
+            if (typeof onChangeCallback === 'function') {
+                quill.on('text-change', () => {
+                    onChangeCallback(quill.root.innerHTML);
+                });
+            }
+
+            return quill;
         }
     };
 
