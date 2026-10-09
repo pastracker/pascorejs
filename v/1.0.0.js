@@ -230,18 +230,11 @@ window.PasCore = (function() {
                 return null;
             }
 
+            // Dihapus kustomisasi buttonList yang bermasalah.
+            // Membiarkan SunEditor menggunakan default toolbar yang dijamin stabil.
             const editorInstance = SUNEDITOR.create(targetEl, {
                 height: '300px',
-                value: initialContent,
-                buttonList: [
-                    ['undo', 'redo'],
-                    ['formatBlock'],
-                    ['bold', 'underline', 'italic', 'strike'],
-                    ['fontColor', 'hiliteColor'],
-                    ['align', 'list', 'lineHeight'],
-                    ['link', 'image', 'video'],
-                    ['fullScreen', 'showBlocks', 'codeView']
-                ]
+                value: initialContent
             });
 
             if (onChangeCallback) {
