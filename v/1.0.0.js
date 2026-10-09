@@ -199,7 +199,6 @@ window.PasCore = (function() {
 
             rootEl.querySelectorAll('[pas-click]').forEach(el => {
                 const actionCall = el.getAttribute('pas-click');
-                // [FIXED] Safely extract the raw function name even if arguments are present
                 const funcName = actionCall.split('(')[0].trim(); 
                 
                 if (typeof methods[funcName] === 'function') {
@@ -232,7 +231,6 @@ window.PasCore = (function() {
             }
 
             const editorInstance = SUNEDITOR.create(targetEl, {
-                plugins: SUNEDITOR.plugins,
                 height: '300px',
                 value: initialContent,
                 buttonList: [
