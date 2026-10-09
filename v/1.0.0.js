@@ -1,7 +1,7 @@
 /**
  * PASCORE ENGINE (pascore.js)
- * Enterprise-grade Vanilla JS framework for PasCore Admin Interface.
- * Zero external dependencies. Replaces Alpine.js & Axios.
+ * Internal WebOS Framework for PasPages.
+ * Lightweight, zero-dependency Vanilla JS engine replacing Alpine.js & Axios.
  */
 
 window.PasCore = (function() {
@@ -12,7 +12,7 @@ window.PasCore = (function() {
     // =========================================================================
     const Net = {
         config: {
-            apiPrefix: '/api/dev-pasapp', // Bisa diganti dinamis sesuai plugin aktif
+            apiPrefix: '/api/dev-pasapp', // Can be dynamically updated based on the active plugin
             tokenKey: 'paspages_jwt'
         },
 
@@ -36,25 +36,25 @@ window.PasCore = (function() {
                 options.headers['Authorization'] = `Bearer ${token}`;
             }
 
+            // Enforce PasCore Backend standard: wrap outgoing data inside { payload: ... }
             if (data && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(options.method)) {
-                // Sesuai standar PasCore Backend: data dibungkus dalam { payload: ... }
                 options.body = JSON.stringify(wrapPayload ? { payload: data } : data);
             }
 
             try {
                 const response = await fetch(url, options);
                 
-                // Cek jika token expired atau user tidak punya akses
+                // Intercept unauthorized or expired sessions globally
                 if (response.status === 401 || response.status === 403) {
                     console.error('[PasCore.Net] Unauthorized. Session expired.');
-                    PasCore.UI.toast('error', 'Sesi Anda telah berakhir. Silakan login kembali.');
+                    PasCore.UI.toast('error', 'Session expired. Please log in again.');
                     setTimeout(() => window.location.href = '/admin/login', 1500);
                     return { success: false, message: 'Unauthorized' };
                 }
 
                 const result = await response.json();
                 
-                // Menstandarkan output kembalian (selalu ada success, data, message)
+                // Standardize the return payload
                 return {
                     success: response.ok && result.success !== false,
                     data: result.data || result,
@@ -79,7 +79,7 @@ window.PasCore = (function() {
     // =========================================================================
     const UI = {
         toast: function(type, message) {
-            // Jika ada sistem Alpine toast lama, gunakan. Jika tidak, buat native DOM Toast.
+            // Fallback to legacy Alpine toast if it still exists in the DOM transition period
             if (window.Alpine && window.Alpine.store('toast')) {
                 window.Alpine.store('toast').show(type, message);
                 return;
@@ -102,13 +102,13 @@ window.PasCore = (function() {
             
             container.appendChild(toast);
             
-            // Animasi masuk
+            // Trigger entry animation
             requestAnimationFrame(() => {
                 toast.classList.remove('translate-y-10', 'opacity-0');
                 toast.classList.add('translate-y-0', 'opacity-100');
             });
 
-            // Auto hapus
+            // Auto remove toast after 4 seconds
             setTimeout(() => {
                 toast.classList.remove('translate-y-0', 'opacity-100');
                 toast.classList.add('translate-y-10', 'opacity-0');
@@ -119,14 +119,15 @@ window.PasCore = (function() {
 
 
     // =========================================================================
-    // 3. PASCORE.STATE (Reactive Engine - Alpine.js Alternative)
+    // 3. PASCORE.STATE (Reactive Engine - WebOS Core)
     // =========================================================================
     const State = {
         /**
-         * @param {string} rootSelector - Pemilih container UI (misal '#app-form-container')
-         * @param {object} initialData - Nilai bawaan form/state
-         * @param {object} methods - Kumpulan fungsi (misal: save(), delete())
-         * @returns {Proxy} - Objek data yang reaktif (jika diubah, DOM ikut berubah)
+         * Initialize a reactive state bounded to a specific DOM context.
+         * @param {string} rootSelector - The target container (e.g., '#app-form-container')
+         * @param {object} initialData - Default state values
+         * @param {object} methods - Action methods (e.g., save(), delete())
+         * @returns {Proxy} - Reactive proxy object
          */
         create: function(rootSelector, initialData = {}, methods = {}) {
             const rootEl = document.querySelector(rootSelector);
@@ -135,25 +136,24 @@ window.PasCore = (function() {
                 return null;
             }
 
-            // Fungsi inti untuk mengupdate DOM jika State berubah
+            // Core engine to parse and update DOM elements when state mutates
             const updateDOM = (state) => {
-                // 1. Update pas-text (mirip x-text)
+                // 1. Update text nodes (pas-text)
                 rootEl.querySelectorAll('[pas-text]').forEach(el => {
                     const key = el.getAttribute('pas-text');
                     if (state[key] !== undefined) el.textContent = state[key];
                 });
 
-                // 2. Update pas-show (mirip x-show)
+                // 2. Update visibility (pas-show) with simple negation support
                 rootEl.querySelectorAll('[pas-show]').forEach(el => {
                     const key = el.getAttribute('pas-show');
-                    // Dukungan sederhana untuk negasi, misal pas-show="!isLoading"
                     const isNegated = key.startsWith('!');
                     const cleanKey = isNegated ? key.substring(1) : key;
                     const condition = isNegated ? !state[cleanKey] : !!state[cleanKey];
                     el.style.display = condition ? '' : 'none';
                 });
 
-                // 3. Update pas-model (Sinkronisasi State ke Input)
+                // 3. Synchronize input values (pas-model: State to DOM)
                 rootEl.querySelectorAll('[pas-model]').forEach(el => {
                     const key = el.getAttribute('pas-model');
                     if (state[key] !== undefined && el.value !== state[key]) {
@@ -162,29 +162,29 @@ window.PasCore = (function() {
                 });
             };
 
-            // Membuat Proxy: Memantau setiap kali script mengubah data (misal state.isLoading = true)
+            // Setup Proxy to intercept state changes and trigger DOM updates
             const stateProxy = new Proxy({ ...initialData }, {
                 set: function(target, property, value) {
                     target[property] = value;
-                    updateDOM(target); // Render ulang DOM setiap ada perubahan
+                    updateDOM(target); 
                     return true;
                 }
             });
 
-            // Inisialisasi: Pasang Event Listener (Input -> State)
+            // Initialize two-way binding listeners (DOM to State)
             rootEl.querySelectorAll('[pas-model]').forEach(el => {
                 const key = el.getAttribute('pas-model');
-                el.value = stateProxy[key] || ''; // Set nilai awal
+                el.value = stateProxy[key] || ''; 
                 
                 el.addEventListener('input', (e) => {
                     stateProxy[key] = e.target.value;
                 });
             });
 
-            // Inisialisasi: Pasang Event Listener Aksi (pas-click)
+            // Attach click action listeners
             rootEl.querySelectorAll('[pas-click]').forEach(el => {
                 const actionCall = el.getAttribute('pas-click');
-                // Mengambil nama fungsi (contoh: "saveApp()" -> "saveApp")
+                // Extract clean function name (e.g., "saveApp()" -> "saveApp")
                 const funcName = actionCall.replace(/\(\)/g, '').trim(); 
                 
                 if (typeof methods[funcName] === 'function') {
@@ -193,14 +193,14 @@ window.PasCore = (function() {
                         methods[funcName].call(methods, stateProxy, e);
                     });
                 } else {
-                    console.warn(`[PasCore.State] Method '${funcName}' not defined.`);
+                    console.warn(`[PasCore.State] Method '${funcName}' is not defined.`);
                 }
             });
 
-            // Render DOM untuk pertama kalinya
+            // Initial DOM render
             updateDOM(stateProxy);
 
-            return stateProxy; // Kembalikan proxy agar bisa diakses oleh dev
+            return stateProxy;
         }
     };
 
@@ -241,7 +241,7 @@ window.PasCore = (function() {
         }
     };
 
-    // Expose Module
+    // Expose Internal WebOS Modules
     return {
         Net,
         UI,
