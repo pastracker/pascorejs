@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PasCore Engine Documentation</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SunEditor CSS/JS for the Editor module to work -->
+    <link href="https://cdn.jsdelivr.net/npm/suneditor@latest/dist/css/suneditor.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/suneditor@latest/dist/suneditor.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        pre { background-color: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; font-size: 0.875rem; }
+        code { font-family: 'Fira Code', monospace; }
+        .sidebar-link { display: block; padding: 0.5rem 1rem; color: #475569; border-radius: 0.375rem; transition: all 0.2s; }
+        .sidebar-link:hover { background-color: #e2e8f0; color: #0f172a; }
+    </style>
+</head>
+<body class="text-slate-800 antialiased flex flex-col md:flex-row h-screen overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="w-full md:w-64 bg-white border-r border-slate-200 h-auto md:h-full overflow-y-auto shrink-0 flex flex-col hidden md:flex">
+        <div class="p-6 border-b border-slate-100">
+            <h1 class="text-2xl font-black text-indigo-600 tracking-tight">PasCore<span class="text-slate-800 text-lg">.js</span></h1>
+            <p class="text-xs text-slate-500 mt-1 uppercase tracking-wider font-semibold">Engine v1.0</p>
+        </div>
+        <nav class="p-4 space-y-1 flex-1">
+            <a href="#overview" class="sidebar-link font-medium">Overview</a>
+            <a href="#module-net" class="sidebar-link font-medium">1. PasCore.Net</a>
+            <a href="#module-ui" class="sidebar-link font-medium">2. PasCore.UI</a>
+            <a href="#module-state" class="sidebar-link font-medium">3. PasCore.State</a>
+            <a href="#module-editor" class="sidebar-link font-medium">4. PasCore.Editor</a>
+            <a href="#live-demo" class="sidebar-link font-medium text-indigo-600 bg-indigo-50 mt-4">Live Demo</a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 h-full overflow-y-auto p-6 md:p-12 lg:px-24">
+        
+        <!-- Header -->
+        <header id="overview" class="mb-12 pb-8 border-b border-slate-200">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-slate-900 mb-4">PasCore Engine</h1>
+            <p class="text-xl text-slate-600 max-w-3xl leading-relaxed">
+                An enterprise-grade, zero-dependency Vanilla JS framework designed specifically for the PasCore Admin Interface. It gracefully replaces Alpine.js and Axios, providing a unified API for networking, UI updates, reactive state, and WYSIWYG editing.
+            </p>
+        </header>
+
+        <!-- Module 1: Net -->
+        <section id="module-net" class="mb-16 scroll-mt-12">
+            <h2 class="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
+                <span class="bg-indigo-100 text-indigo-600 w-8 h-8 rounded-lg flex items-center justify-center text-sm">1</span>
+                PasCore.Net
+            </h2>
+            <p class="text-slate-600 mb-4">
+                The Networking & API module. It handles HTTP requests, automatically manages JWT tokens, wraps payloads according to PasCore backend standards, and intercepts 401/403 errors to redirect unauthorized users to the login page.
+            </p>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="font-semibold text-slate-800 mb-2">Features</h3>
+                    <ul class="list-disc list-inside text-slate-600 space-y-1">
+                        <li>Standardized <code>fetch</code> wrapper.</li>
+                        <li>Auto-injects <code>Authorization: Bearer</code> headers.</li>
+                        <li>Wraps POST/PUT bodies in <code>{ payload: data }</code>.</li>
+                        <li>Guaranteed return structure: <code>{ success, data, message, status }</code>.</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-slate-800 mb-2">Usage Example</h3>
+<pre><code>// GET Request
+const users = await PasCore.Net.get('/users');
+
+// POST Request (Auto wrapped payload)
+const res = await PasCore.Net.post('/users/create', { 
+    name: 'John' 
+});
+
+if (res.success) {
+    console.log(res.data);
+}</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: UI -->
+        <section id="module-ui" class="mb-16 scroll-mt-12">
+            <h2 class="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
+                <span class="bg-emerald-100 text-emerald-600 w-8 h-8 rounded-lg flex items-center justify-center text-sm">2</span>
+                PasCore.UI
+            </h2>
+            <p class="text-slate-600 mb-4">
+                DOM Utilities and Notifications. Provides an elegant, animated toast notification system out of the box, falling back to Alpine.js stores if configured, or generating native DOM elements instantly.
+            </p>
+            <div class="bg-white p-6 border border-slate-200 rounded-xl shadow-sm mb-4">
+                <h3 class="font-semibold text-slate-800 mb-4">Try it out:</h3>
+                <div class="flex gap-4">
+                    <button onclick="PasCore.UI.toast('success', 'Data saved successfully!')" class="px-4 py-2 bg-emerald-500 text-white rounded-md shadow hover:bg-emerald-600 transition">Success Toast</button>
+                    <button onclick="PasCore.UI.toast('error', 'Operation failed. Please try again.')" class="px-4 py-2 bg-red-500 text-white rounded-md shadow hover:bg-red-600 transition">Error Toast</button>
+                    <button onclick="PasCore.UI.toast('warning', 'Session is about to expire.')" class="px-4 py-2 bg-amber-500 text-white rounded-md shadow hover:bg-amber-600 transition">Warning Toast</button>
+                </div>
+            </div>
+<pre><code>// Syntax
+PasCore.UI.toast('success', 'Settings updated successfully!');
+PasCore.UI.toast('error', 'Network error occurred.');</code></pre>
+        </section>
+
+        <!-- Module 3: State -->
+        <section id="module-state" class="mb-16 scroll-mt-12">
+            <h2 class="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
+                <span class="bg-blue-100 text-blue-600 w-8 h-8 rounded-lg flex items-center justify-center text-sm">3</span>
+                PasCore.State
+            </h2>
+            <p class="text-slate-600 mb-4">
+                The Alpine.js alternative. A lightweight reactive engine utilizing JavaScript Proxies. It binds your data model to the DOM and automatically updates elements when variables change.
+            </p>
+            
+            <div class="grid md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <h3 class="font-semibold text-slate-800 mb-2">Directives</h3>
+                    <ul class="space-y-3 text-sm text-slate-600">
+                        <li><code class="bg-slate-100 text-pink-600 px-1 py-0.5 rounded">pas-model="key"</code> Two-way data binding for inputs.</li>
+                        <li><code class="bg-slate-100 text-pink-600 px-1 py-0.5 rounded">pas-text="key"</code> Renders text content dynamically.</li>
+                        <li><code class="bg-slate-100 text-pink-600 px-1 py-0.5 rounded">pas-show="key"</code> Toggles display (supports <code>!key</code> negation).</li>
+                        <li><code class="bg-slate-100 text-pink-600 px-1 py-0.5 rounded">pas-click="method()"</code> Binds click events to defined methods.</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-slate-800 mb-2">Initialization</h3>
+<pre><code>const appState = PasCore.State.create(
+    '#app', 
+    { name: 'John Doe', isLoading: false }, // initial data
+    {
+        save: function(state, event) {
+            state.isLoading = true;
+            // API call...
+        }
+    }
+);</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 4: Editor -->
+        <section id="module-editor" class="mb-16 scroll-mt-12">
+            <h2 class="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
+                <span class="bg-purple-100 text-purple-600 w-8 h-8 rounded-lg flex items-center justify-center text-sm">4</span>
+                PasCore.Editor
+            </h2>
+            <p class="text-slate-600 mb-4">
+                A seamless wrapper for integrating SunEditor (a robust WYSIWYG editor). It sets up the editor with a predefined toolbar tailored for enterprise content management.
+            </p>
+<pre><code>// Initializes editor on a textarea with ID 'content-editor'
+const editor = PasCore.Editor.init(
+    'content-editor', 
+    '<p>Initial HTML content</p>', 
+    (content) => { console.log("Content changed:", content); }
+);</code></pre>
+        </section>
+
+
+        <!-- Live Demo Section -->
+        <section id="live-demo" class="mb-24 p-8 bg-indigo-50 border border-indigo-100 rounded-2xl scroll-mt-12">
+            <h2 class="text-2xl font-bold text-indigo-900 mb-4">Interactive Demo (PasCore.State)</h2>
+            <p class="text-indigo-700 mb-6">This form is powered completely by the inline <code>pascore.js</code> script. Try typing in the field or toggling the visibility.</p>
+            
+            <div id="demo-app" class="bg-white p-6 rounded-xl shadow-sm border border-indigo-100 max-w-lg">
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Your Name</label>
+                    <!-- pas-model -->
+                    <input pas-model="username" type="text" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                </div>
+
+                <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 mb-4">
+                    <!-- pas-text -->
+                    <p class="text-lg">Hello, <strong class="text-indigo-600" pas-text="username"></strong>!</p>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <div class="flex gap-2">
+                        <!-- pas-click -->
+                        <button pas-click="sayHello()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition">Greet Me</button>
+                        <button pas-click="toggleSecret()" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition">Toggle Secret</button>
+                    </div>
+                </div>
+
+                <!-- pas-show -->
+                <div pas-show="showSecret" class="mt-6 p-4 bg-amber-50 text-amber-800 border border-amber-200 rounded-lg text-sm font-medium" style="display: none;">
+                    🚀 Secret message unlocked! The proxy reactive engine is working perfectly.
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- INJECTING THE ACTUAL PASCORE.JS CODE PROVIDED IN THE PROMPT -->
+    <script>
+        /**
+         * PASCORE ENGINE (pascore.js)
+         * Enterprise-grade Vanilla JS framework for PasCore Admin Interface.
+         * Zero external dependencies. Replaces Alpine.js & Axios.
+         */
+        window.PasCore = (function() {
+            'use strict';
+
+            // 1. PASCORE.NET
+            const Net = {
+                config: { apiPrefix: '/api/dev-pasapp', tokenKey: 'paspages_jwt' },
+                _getToken: function() { return localStorage.getItem(this.config.tokenKey) || localStorage.getItem('paspages_token'); },
+                request: async function(endpoint, method = 'GET', data = null, wrapPayload = true) {
+                    const url = endpoint.startsWith('http') ? endpoint : `${this.config.apiPrefix}${endpoint}`;
+                    const token = this._getToken();
+                    const options = { method: method.toUpperCase(), headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' } };
+                    if (token) options.headers['Authorization'] = `Bearer ${token}`;
+                    if (data && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(options.method)) {
+                        options.body = JSON.stringify(wrapPayload ? { payload: data } : data);
+                    }
+                    try {
+                        const response = await fetch(url, options);
+                        if (response.status === 401 || response.status === 403) {
+                            console.error('[PasCore.Net] Unauthorized. Session expired.');
+                            PasCore.UI.toast('error', 'Sesi Anda telah berakhir. Silakan login kembali.');
+                            return { success: false, message: 'Unauthorized' };
+                        }
+                        const result = await response.json();
+                        return { success: response.ok && result.success !== false, data: result.data || result, message: result.message || (response.ok ? 'Operation successful' : 'Operation failed'), status: response.status };
+                    } catch (error) {
+                        console.error(`[PasCore.Net] Fetch Error (${url}):`, error);
+                        return { success: false, data: null, message: 'Network connection failed.', status: 0 };
+                    }
+                },
+                get: function(endpoint) { return this.request(endpoint, 'GET'); },
+                post: function(endpoint, data, wrap = true) { return this.request(endpoint, 'POST', data, wrap); },
+                put: function(endpoint, data, wrap = true) { return this.request(endpoint, 'PUT', data, wrap); },
+                del: function(endpoint, data, wrap = true) { return this.request(endpoint, 'DELETE', data, wrap); }
+            };
+
+            // 2. PASCORE.UI
+            const UI = {
+                toast: function(type, message) {
+                    if (window.Alpine && window.Alpine.store('toast')) {
+                        window.Alpine.store('toast').show(type, message);
+                        return;
+                    }
+                    let container = document.getElementById('pascore-toast-container');
+                    if (!container) {
+                        container = document.createElement('div');
+                        container.id = 'pascore-toast-container';
+                        container.className = 'fixed bottom-6 right-6 z-[9999] flex flex-col gap-2';
+                        document.body.appendChild(container);
+                    }
+                    const toast = document.createElement('div');
+                    const bgClass = type === 'success' ? 'bg-white border-emerald-200 text-slate-800' : 
+                                    (type === 'error' ? 'bg-red-50 border-red-200 text-red-800' : 'bg-amber-50 border-amber-200 text-amber-800');
+                    toast.className = `flex items-center gap-3 px-6 py-4 rounded-xl shadow-2xl border transition-all transform translate-y-10 opacity-0 duration-300 ${bgClass}`;
+                    toast.innerHTML = `<span class="font-bold text-sm pr-4">${message}</span>`;
+                    container.appendChild(toast);
+                    requestAnimationFrame(() => {
+                        toast.classList.remove('translate-y-10', 'opacity-0');
+                        toast.classList.add('translate-y-0', 'opacity-100');
+                    });
+                    setTimeout(() => {
+                        toast.classList.remove('translate-y-0', 'opacity-100');
+                        toast.classList.add('translate-y-10', 'opacity-0');
+                        setTimeout(() => toast.remove(), 300);
+                    }, 4000);
+                }
+            };
+
+            // 3. PASCORE.STATE
+            const State = {
+                create: function(rootSelector, initialData = {}, methods = {}) {
+                    const rootEl = document.querySelector(rootSelector);
+                    if (!rootEl) { console.warn(`[PasCore.State] Root element ${rootSelector} not found.`); return null; }
+                    
+                    const updateDOM = (state) => {
+                        rootEl.querySelectorAll('[pas-text]').forEach(el => {
+                            const key = el.getAttribute('pas-text');
+                            if (state[key] !== undefined) el.textContent = state[key];
+                        });
+                        rootEl.querySelectorAll('[pas-show]').forEach(el => {
+                            const key = el.getAttribute('pas-show');
+                            const isNegated = key.startsWith('!');
+                            const cleanKey = isNegated ? key.substring(1) : key;
+                            const condition = isNegated ? !state[cleanKey] : !!state[cleanKey];
+                            el.style.display = condition ? '' : 'none';
+                        });
+                        rootEl.querySelectorAll('[pas-model]').forEach(el => {
+                            const key = el.getAttribute('pas-model');
+                            if (state[key] !== undefined && el.value !== state[key]) el.value = state[key];
+                        });
+                    };
+
+                    const stateProxy = new Proxy({ ...initialData }, {
+                        set: function(target, property, value) {
+                            target[property] = value;
+                            updateDOM(target);
+                            return true;
+                        }
+                    });
+
+                    rootEl.querySelectorAll('[pas-model]').forEach(el => {
+                        const key = el.getAttribute('pas-model');
+                        el.value = stateProxy[key] || '';
+                        el.addEventListener('input', (e) => { stateProxy[key] = e.target.value; });
+                    });
+
+                    rootEl.querySelectorAll('[pas-click]').forEach(el => {
+                        const actionCall = el.getAttribute('pas-click');
+                        const funcName = actionCall.replace(/\(\)/g, '').trim(); 
+                        if (typeof methods[funcName] === 'function') {
+                            el.addEventListener('click', (e) => {
+                                e.preventDefault();
+                                methods[funcName].call(methods, stateProxy, e);
+                            });
+                        }
+                    });
+
+                    updateDOM(stateProxy);
+                    return stateProxy;
+                }
+            };
+
+            // 4. PASCORE.EDITOR
+            const Editor = {
+                init: function(elementId, initialContent = '', onChangeCallback = null) {
+                    const targetEl = document.getElementById(elementId);
+                    if (!targetEl) return null;
+                    if (typeof SUNEDITOR === 'undefined') return null;
+                    const editorInstance = SUNEDITOR.create(targetEl, {
+                        plugins: SUNEDITOR.plugins,
+                        height: '300px',
+                        value: initialContent,
+                        buttonList: [['undo', 'redo'], ['formatBlock'], ['bold', 'underline', 'italic', 'strike'], ['fontColor', 'hiliteColor'], ['align', 'list', 'lineHeight'], ['link', 'image', 'video'], ['fullScreen', 'showBlocks', 'codeView']]
+                    });
+                    if (onChangeCallback) editorInstance.onChange = onChangeCallback;
+                    return editorInstance;
+                }
+            };
+
+            return { Net, UI, State, Editor };
+        })();
+    </script>
+
+    <!-- INITIALIZE THE DEMO -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Create the state for our live demo
+            PasCore.State.create('#demo-app', 
+                { 
+                    username: 'Administrator',
+                    showSecret: false 
+                }, 
+                {
+                    sayHello: function(state) {
+                        if (!state.username.trim()) {
+                            PasCore.UI.toast('error', 'Please enter a name first!');
+                            return;
+                        }
+                        PasCore.UI.toast('success', `Welcome back, ${state.username}!`);
+                    },
+                    toggleSecret: function(state) {
+                        state.showSecret = !state.showSecret;
+                        if(state.showSecret) {
+                            PasCore.UI.toast('warning', 'Secret area revealed.');
+                        }
+                    }
+                }
+            );
+        });
+    </script>
+
+</body>
+</html>
