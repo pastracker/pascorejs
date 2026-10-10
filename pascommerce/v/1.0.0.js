@@ -2,20 +2,21 @@
  * PASCOMMERCE SDK (pascommerce.js)
  * Official E-Commerce Frontend Engine for PasPages.
  * Lightweight, zero-dependency Vanilla JS engine for Cart & UI Components.
- * Version: 1.0.0 (Reactive Cart, Toast, Drawer & Dynamic Config)
+ * Version: 1.0.0 (Smart Catalog Fetcher, Variant Detection, Image Parser, Real Currency, Fallback Routing)
  */
 
 window.PasCommerce = (function() {
   // --- 1. CONFIGURATION & STATE ---
   const config = {
-    themeColor: '#5b42f3', // Default brand color
+    themeColor: '#5b42f3', 
     cartPosition: 'bottom-right', // Options: bottom-right, bottom-left, top-right, top-left
-    currencySymbol: '$' // Will be overridden by initialization config
+    currencySymbol: '$' 
   };
 
   const state = {
     cart: [],
-    isCartOpen: false
+    isCartOpen: false,
+    productsCatalog: [] // Cache for database products
   };
 
   // --- 2. UI ENGINE ---
@@ -50,6 +51,7 @@ window.PasCommerce = (function() {
       const isSuccess = type === 'success';
       const bgColor = isSuccess ? 'bg-slate-900' : 'bg-rose-600';
       const iconColor = isSuccess ? 'text-emerald-400' : 'text-white';
+      
       const icon = isSuccess 
         ? `<svg class="w-5 h-5 ${iconColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>`
         : `<svg class="w-5 h-5 ${iconColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>`;
@@ -59,11 +61,13 @@ window.PasCommerce = (function() {
       
       container.appendChild(toast);
       
+      // Trigger animation
       requestAnimationFrame(() => {
         toast.classList.remove('pc-toast-enter');
         toast.classList.add('pc-toast-active');
       });
 
+      // Auto-remove toast after 3 seconds
       setTimeout(() => {
         toast.classList.remove('pc-toast-active');
         toast.style.opacity = '0';
@@ -164,6 +168,7 @@ window.PasCommerce = (function() {
         if(count > 0) badge.classList.remove('scale-0');
         else badge.classList.add('scale-0');
       }
+      // Update any element bound to cart count
       document.querySelectorAll('[pc-bind="cart_count"]').forEach(el => el.innerText = count);
     },
 
@@ -171,7 +176,7 @@ window.PasCommerce = (function() {
       const btn = document.getElementById('pc-floating-cart');
       if(!btn) return;
       btn.classList.remove('pc-cart-wiggle');
-      void btn.offsetWidth; 
+      void btn.offsetWidth; // Trigger reflow to restart animation
       btn.classList.add('pc-cart-wiggle');
     }
   };
@@ -179,22 +184,61 @@ window.PasCommerce = (function() {
   // --- 3. CORE COMMERCE LOGIC ---
   const Actions = {
     addToCart: (productId, qty) => {
-      // NOTE: Replace with actual backend fetch API logic later.
-      // E.g., fetch('/api/dev-pc_core/cart/add', { method: 'POST', body: ... })
+      // Find the actual product from the cached database
+      const product = state.productsCatalog.find(p => p.id === productId);
       
-      const existing = state.cart.find(i => i.id === productId);
+      if (!product) {
+        UI.toast('Still loading product data. Please try again in a moment.', 'error');
+        return;
+      }
+
+      // 1. Determine Base Price (Prioritize sale_price if available)
+      const baseP = parseFloat(product.price) || 0;
+      const saleP = parseFloat(product.sale_price) || 0;
+      let activePrice = (saleP > 0) ? saleP : baseP;
+      
+      // 2. Detect Selected Variant from the Product Page (If Any)
+      let variantName = '';
+      const variantSelect = document.getElementById('product-variants');
+      if (variantSelect && variantSelect.value !== "") {
+        try {
+          const variantsJson = JSON.parse(product.variants_json.replace(/&quot;/g, '"') || '[]');
+          const selectedVariant = variantsJson[variantSelect.value];
+          if (selectedVariant) {
+             variantName = selectedVariant.name;
+             // If variant has a specific price, override the active price
+             if (selectedVariant.price > 0) activePrice = selectedVariant.price;
+          }
+        } catch(e) { console.warn("Variant parsing failed", e); }
+      }
+
+      // 3. Extract Thumbnail from JSON Array
+      let imgUrl = 'https://placehold.co/200x200/f8fafc/94a3b8?text=No+Image';
+      try {
+        const imgsJson = JSON.parse(product.images_json.replace(/&quot;/g, '"') || '[]');
+        if (imgsJson && imgsJson.length > 0) imgUrl = imgsJson[0];
+      } catch(e) {}
+
+      // 4. Push to Cart State (Use a unique ID to prevent merging different variants)
+      // Base64 encode the variant name to ensure a safe, unique cart item string
+      const cartItemId = variantName ? `${productId}-${btoa(variantName)}` : productId;
+      
+      const existing = state.cart.find(i => i.cartItemId === cartItemId);
       if(existing) {
         existing.qty += qty;
       } else {
         state.cart.push({ 
+          cartItemId: cartItemId,
           id: productId, 
           qty: qty, 
-          price: 250000, // Dummy price for demo
-          name: "Product ID " + productId.substring(0,6),
-          img: "https://placehold.co/200x200/f8fafc/94a3b8?text=Item"
+          price: activePrice,
+          name: product.title,
+          variant: variantName,
+          img: imgUrl
         });
       }
-      UI.toast(`Successfully added ${qty} item(s) to cart!`, 'success');
+
+      UI.toast(`Added to cart!`, 'success');
       UI.animateCartWiggle();
       Actions.refreshCartUI();
     },
@@ -224,7 +268,8 @@ window.PasCommerce = (function() {
             <img src="${item.img}" class="w-16 h-16 rounded-xl object-cover bg-slate-100 shrink-0">
             <div class="flex-1 min-w-0">
               <h4 class="text-sm font-bold text-slate-800 truncate mb-1">${item.name}</h4>
-              <div class="text-xs font-black" style="color:${config.themeColor}">${config.currencySymbol} ${item.price.toLocaleString('en-US')}</div>
+              ${item.variant ? `<div class="text-[10px] font-bold text-slate-400 mb-1">${item.variant}</div>` : ''}
+              <div class="text-xs font-black" style="color:${config.themeColor}">${config.currencySymbol} ${item.price.toLocaleString('en-US', {minimumFractionDigits:2})}</div>
             </div>
             <div class="flex items-center bg-slate-50 rounded-lg border border-slate-200 shrink-0">
               <button onclick="PasCommerce.updateQty(${idx}, -1)" class="w-8 h-8 flex items-center justify-center text-slate-500 font-bold hover:text-slate-900 transition-colors">-</button>
@@ -235,11 +280,15 @@ window.PasCommerce = (function() {
         `).join('');
       }
       
-      if(subtotalEl) subtotalEl.innerText = `${config.currencySymbol} ${subtotal.toLocaleString('en-US')}`;
+      if(subtotalEl) {
+        // Safe string replacement without overriding potential inner HTML structures
+        subtotalEl.innerText = `${config.currencySymbol} ${subtotal.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+      }
     }
   };
 
   const initScanner = () => {
+    // Event delegation for action buttons
     document.addEventListener('click', (e) => {
       const btn = e.target.closest('[pc-action]');
       if(!btn) return;
@@ -249,10 +298,14 @@ window.PasCommerce = (function() {
         const id = btn.getAttribute('pc-id');
         const qtyTarget = btn.getAttribute('pc-qty-target');
         let qty = 1;
+        
+        // Handle custom quantity input mapping (mostly used in single product page)
         if(qtyTarget) {
           const input = document.querySelector(qtyTarget);
           if(input) qty = parseInt(input.value) || 1;
         }
+        
+        // Execute Core Add to Cart Logic
         Actions.addToCart(id, qty);
       } 
       else if(action === 'open_cart') {
@@ -261,7 +314,52 @@ window.PasCommerce = (function() {
     });
   };
 
-  // --- PUBLIC API EXPORTS ---
+  // --- 4. DATA SYNC BOOTSTRAPPER ---
+  
+  // Smart Helper for API Auto-Fallback (Handles Dev vs Production namespaces)
+  const fetchApiWithFallback = async (endpoint) => {
+    try {
+      let res = await fetch(`/api/dev-pc_core${endpoint}`);
+      // If development namespace fails (e.g., 404 Not Found), try the production namespace
+      if (!res.ok) {
+        res = await fetch(`/api/pc_core${endpoint}`);
+      }
+      return await res.json();
+    } catch (err) {
+      return {}; // Return empty object gracefully on complete failure
+    }
+  };
+
+  const loadStoreData = async () => {
+    try {
+      // Fetch catalog and settings in parallel without blocking the UI
+      const [prodRes, setRes] = await Promise.all([
+        fetchApiWithFallback('/products/list'),
+        fetchApiWithFallback('/settings/get')
+      ]);
+
+      // Cache the catalog so Add To Cart can accurately retrieve real prices
+      if (prodRes && prodRes.success && Array.isArray(prodRes.data)) {
+        state.productsCatalog = prodRes.data;
+      }
+
+      // Override the default currency configuration from Global Database Settings
+      if (setRes && setRes.success && Array.isArray(setRes.data)) {
+        const globalSet = setRes.data.find(s => s.id === 'global');
+        if (globalSet && globalSet.config_json) {
+           const parsedConfig = JSON.parse(globalSet.config_json);
+           if (parsedConfig.currency_symbol) config.currencySymbol = parsedConfig.currency_symbol;
+        }
+      }
+      
+      // Refresh the Cart UI to apply the fetched Currency Symbol
+      Actions.refreshCartUI();
+    } catch(err) {
+      console.warn('PasCommerce SDK failed to sync store data:', err);
+    }
+  };
+
+  // --- 5. PUBLIC API EXPORTS ---
   return {
     init: (userConfig = {}) => {
       Object.assign(config, userConfig);
@@ -269,7 +367,7 @@ window.PasCommerce = (function() {
       UI.renderFloatingCart();
       UI.renderCartDrawer();
       initScanner();
-      Actions.refreshCartUI();
+      loadStoreData(); // Trigger Background Data Sync
     },
     openCart: () => {
       document.getElementById('pc-cart-drawer').classList.remove('pointer-events-none');
@@ -289,6 +387,7 @@ window.PasCommerce = (function() {
       }
     },
     toast: UI.toast,
-    modal: UI.modal
+    modal: UI.modal,
+    getCart: () => state.cart
   };
 })();
