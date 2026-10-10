@@ -2,7 +2,7 @@
  * PASCORE ENGINE (pascore.js)
  * Internal WebOS Framework for PasPages.
  * Lightweight, zero-dependency Vanilla JS engine.
- * Version: 1.0.0 (Full UI & Reactive Pack)
+ * Version: 1.1.0 (Full UI & Reactive Pack + Exposed Methods)
  */
 
 window.PasCore = (function() {
@@ -288,6 +288,19 @@ window.PasCore = (function() {
                     return true;
                 }
             });
+
+            // =========================================================
+            // [TAMBAHAN BARU] Ekspos methods ke dalam stateProxy
+            // =========================================================
+            for (let funcName in methods) {
+                if (typeof methods[funcName] === 'function') {
+                    // Bind fungsi agar secara otomatis menerima (state, event/args)
+                    stateProxy[funcName] = function(eventOrArgs) {
+                        return methods[funcName].call(methods, stateProxy, eventOrArgs);
+                    };
+                }
+            }
+            // =========================================================
 
             // Init Two-Way Data Binding for Inputs
             rootEl.querySelectorAll('[pas-model]').forEach(el => {
