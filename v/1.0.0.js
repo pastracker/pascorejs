@@ -2,7 +2,7 @@
  * PASCORE ENGINE (pascore.js)
  * Internal WebOS Framework for PasPages.
  * Lightweight, zero-dependency Vanilla JS engine.
- * Version: 1.1.0 (Full UI & Reactive Pack + Exposed Methods)
+ * Version: 1.0.0 (Full UI & Reactive Pack + Advanced Data Binding)
  */
 
 window.PasCore = (function() {
@@ -221,9 +221,10 @@ window.PasCore = (function() {
             }
 
             // Smart evaluator function to translate strings into JavaScript logic
-            const evaluate = (expr, state) => {
+            const evaluate = (expr, state, localVars = {}) => {
                 try {
-                    return new Function('state', `with(state) { return ${expr}; }`)(state);
+                    const ctx = { ...state, ...localVars };
+                    return new Function('ctx', `with(ctx) { return ${expr}; }`)(ctx);
                 } catch(e) {
                     console.error(`[PasCore.State] Expression error on "${expr}":`, e);
                     return undefined;
@@ -231,28 +232,37 @@ window.PasCore = (function() {
             };
 
             const updateDOM = (state) => {
-                // 1. Text Content Binding (Supports expressions, e.g., pas-text="count + 1")
+                // 1. Text Content Binding
                 rootEl.querySelectorAll('[pas-text]').forEach(el => {
                     const val = evaluate(el.getAttribute('pas-text'), state);
                     if (val !== undefined) el.textContent = val;
                 });
 
-                // 2. Visibility Binding (Supports comparisons, e.g., pas-show="tab === 'apps'")
+                // 2. Visibility Binding
                 rootEl.querySelectorAll('[pas-show]').forEach(el => {
                     const condition = evaluate(el.getAttribute('pas-show'), state);
                     el.style.display = condition ? '' : 'none';
                 });
 
-                // 3. Input Value Binding (Requires direct-key for Two-Way Binding)
+                // 3. Input Value Binding (Handles select, radio, checkbox seamlessly)
                 rootEl.querySelectorAll('[pas-model]').forEach(el => {
                     const key = el.getAttribute('pas-model');
-                    if (state[key] !== undefined && el.value !== String(state[key])) {
-                        if (el.type === 'checkbox') el.checked = !!state[key];
-                        else el.value = state[key];
+                    const val = evaluate(key, state);
+
+                    if (val !== undefined) {
+                        if (el.type === 'checkbox') {
+                            el.checked = !!val;
+                        } else if (el.type === 'radio') {
+                            el.checked = (el.value === String(val));
+                        } else if (el.tagName === 'SELECT') {
+                            if (el.value !== String(val)) el.value = val;
+                        } else {
+                            if (el.value !== String(val)) el.value = val;
+                        }
                     }
                 });
 
-                // 4. Dynamic Attribute Binding (Supports negation, e.g., pas-bind:disabled="!isReady")
+                // 4. Dynamic Attribute Binding
                 rootEl.querySelectorAll('*').forEach(el => {
                     Array.from(el.attributes).forEach(attr => {
                         if (attr.name.startsWith('pas-bind:')) {
@@ -279,6 +289,63 @@ window.PasCore = (function() {
                         else el.classList.remove(...classes);
                     }
                 });
+
+                // 6. Template Array Rendering (For loops)
+                // Usage: <template pas-for="item in arrayData" pas-key="id"> ...HTML... </template>
+                rootEl.querySelectorAll('template[pas-for]').forEach(tpl => {
+                    const expr = tpl.getAttribute('pas-for'); 
+                    const parts = expr.split(' in ');
+                    if (parts.length !== 2) return;
+                    
+                    const itemName = parts[0].trim();
+                    const arrayName = parts[1].trim();
+                    const arrayData = evaluate(arrayName, state) || [];
+
+                    let container = tpl.nextElementSibling;
+                    if (!container || !container.classList.contains('pas-for-container')) {
+                        container = document.createElement('div');
+                        container.className = 'pas-for-container contents';
+                        tpl.parentNode.insertBefore(container, tpl.nextSibling);
+                    }
+
+                    container.innerHTML = ''; // Clear for re-render
+                    
+                    arrayData.forEach((item) => {
+                        const clone = tpl.content.cloneNode(true);
+                        
+                        // Parse simple {{item.prop}} templating within the loop
+                        const walker = document.createTreeWalker(clone, NodeFilter.SHOW_TEXT, null, false);
+                        let textNode;
+                        while ((textNode = walker.nextNode())) {
+                            if (textNode.nodeValue.includes('{{')) {
+                                textNode.nodeValue = textNode.nodeValue.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (match, path) => {
+                                    if (path.startsWith(itemName + '.')) {
+                                        const prop = path.split('.')[1];
+                                        return item[prop] !== undefined ? item[prop] : '';
+                                    }
+                                    return match;
+                                });
+                            }
+                        }
+                        
+                        // Attribute parsing within loop
+                        clone.querySelectorAll('*').forEach(el => {
+                            Array.from(el.attributes).forEach(attr => {
+                                if (attr.value.includes('{{')) {
+                                    attr.value = attr.value.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (match, path) => {
+                                         if (path.startsWith(itemName + '.')) {
+                                            const prop = path.split('.')[1];
+                                            return item[prop] !== undefined ? item[prop] : '';
+                                        }
+                                        return match;
+                                    });
+                                }
+                            });
+                        });
+                        
+                        container.appendChild(clone);
+                    });
+                });
             };
 
             const stateProxy = new Proxy({ ...initialData }, {
@@ -289,29 +356,32 @@ window.PasCore = (function() {
                 }
             });
 
-            // =========================================================
-            // [TAMBAHAN BARU] Ekspos methods ke dalam stateProxy
-            // =========================================================
+            // Expose methods to stateProxy
             for (let funcName in methods) {
                 if (typeof methods[funcName] === 'function') {
-                    // Bind fungsi agar secara otomatis menerima (state, event/args)
                     stateProxy[funcName] = function(eventOrArgs) {
                         return methods[funcName].call(methods, stateProxy, eventOrArgs);
                     };
                 }
             }
-            // =========================================================
 
-            // Init Two-Way Data Binding for Inputs
-            rootEl.querySelectorAll('[pas-model]').forEach(el => {
-                const key = el.getAttribute('pas-model');
-                if (el.type === 'checkbox') el.checked = !!stateProxy[key];
-                else el.value = stateProxy[key] !== undefined ? stateProxy[key] : ''; 
-                
-                el.addEventListener('input', (e) => {
-                    if (e.target.type === 'checkbox') stateProxy[key] = e.target.checked;
-                    else stateProxy[key] = e.target.value;
-                });
+            // Init Two-Way Data Binding for Inputs via Event Delegation (Safe for dynamic elements)
+            rootEl.addEventListener('input', (e) => {
+                const el = e.target;
+                if (el.hasAttribute('pas-model')) {
+                    const key = el.getAttribute('pas-model');
+                    if (el.type === 'checkbox') stateProxy[key] = el.checked;
+                    else stateProxy[key] = el.value;
+                }
+            });
+
+            // Handle Radio Button and Select changes specifically
+            rootEl.addEventListener('change', (e) => {
+                const el = e.target;
+                if (el.hasAttribute('pas-model') && (el.type === 'radio' || el.tagName === 'SELECT')) {
+                     const key = el.getAttribute('pas-model');
+                     stateProxy[key] = el.value;
+                }
             });
 
             // Init Event Listeners
@@ -319,20 +389,27 @@ window.PasCore = (function() {
                 Array.from(el.attributes).forEach(attr => {
                     let isEvent = false;
                     let eventType = '';
+                    let modifiers = [];
                     
                     if (attr.name === 'pas-click') {
                         isEvent = true;
                         eventType = 'click';
                     } else if (attr.name.startsWith('pas-on:')) {
                         isEvent = true;
-                        eventType = attr.name.split(':')[1];
+                        const parts = attr.name.split(':');
+                        const eventParts = parts[1].split('.');
+                        eventType = eventParts[0];
+                        modifiers = eventParts.slice(1);
                     }
 
                     if (isEvent) {
                         const funcName = attr.value.split('(')[0].trim(); 
                         if (typeof methods[funcName] === 'function') {
                             el.addEventListener(eventType, (e) => {
-                                if (eventType === 'submit' || el.tagName === 'A') e.preventDefault();
+                                // Apply Modifiers (.prevent, .stop)
+                                if (modifiers.includes('prevent') || eventType === 'submit' || el.tagName === 'A') e.preventDefault();
+                                if (modifiers.includes('stop')) e.stopPropagation();
+
                                 methods[funcName].call(methods, stateProxy, e);
                             });
                         }
@@ -340,6 +417,7 @@ window.PasCore = (function() {
                 });
             });
 
+            // Initial render
             updateDOM(stateProxy);
             return stateProxy;
         }
