@@ -2,7 +2,7 @@
  * PASCORE ENGINE (pascore.js)
  * Internal WebOS Framework for PasPages.
  * Lightweight, zero-dependency Vanilla JS engine.
- * Version: 1.0.0 (Full UI & Reactive Pack + Advanced Data Binding)
+ * Version: 1.0.0 (Enterprise Pack: Global Delegation, EventBus, DragDrop & Scoped CSS)
  */
 
 window.PasCore = (function() {
@@ -97,7 +97,6 @@ window.PasCore = (function() {
     // 2. PASCORE.UI (DOM & Layout Utilities)
     // =========================================================================
     const UI = {
-        // Global Toast Notification System
         toast: function(type, message) {
             let container = document.getElementById('pascore-toast-container');
             if (!container) {
@@ -116,13 +115,11 @@ window.PasCore = (function() {
             
             container.appendChild(toast);
             
-            // Trigger entrance animation
             requestAnimationFrame(() => {
                 toast.classList.remove('translate-y-10', 'opacity-0');
                 toast.classList.add('translate-y-0', 'opacity-100');
             });
 
-            // Auto-remove after 4 seconds
             setTimeout(() => {
                 toast.classList.remove('translate-y-0', 'opacity-100');
                 toast.classList.add('translate-y-10', 'opacity-0');
@@ -130,36 +127,32 @@ window.PasCore = (function() {
             }, 4000);
         },
 
-        // Modal Controller
         modal: function(modalId, action = 'show') {
             const el = document.getElementById(modalId);
             if (!el) return;
 
             if (action === 'show') {
                 el.style.display = 'flex';
-                // Trigger entrance animation for modal overlay and content box
                 requestAnimationFrame(() => {
                     el.classList.remove('opacity-0');
                     const child = el.firstElementChild;
                     if(child) child.classList.remove('scale-95', 'opacity-0');
                 });
-                document.body.style.overflow = 'hidden'; // Lock body scroll
+                document.body.style.overflow = 'hidden';
                 el.setAttribute('data-pas-modal', 'true');
             } else {
                 el.classList.add('opacity-0');
                 const child = el.firstElementChild;
                 if(child) child.classList.add('scale-95', 'opacity-0');
                 
-                // Match timeout with CSS transition duration
                 setTimeout(() => {
                     el.style.display = 'none';
-                    document.body.style.overflow = ''; // Unlock body scroll
+                    document.body.style.overflow = '';
                     el.removeAttribute('data-pas-modal');
                 }, 200); 
             }
         },
 
-        // Global Confirm Dialog (Promise-based)
         confirm: function(title, message, confirmText = 'Yes, Proceed', cancelText = 'Cancel') {
             return new Promise((resolve) => {
                 const overlay = document.createElement('div');
@@ -179,7 +172,6 @@ window.PasCore = (function() {
                 overlay.appendChild(box);
                 document.body.appendChild(overlay);
 
-                // Trigger entrance animation
                 requestAnimationFrame(() => {
                     overlay.classList.remove('opacity-0');
                     box.classList.remove('scale-95');
@@ -200,7 +192,6 @@ window.PasCore = (function() {
         }
     };
 
-    // Global listener to close active modals when pressing the ESC key
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             document.querySelectorAll('[data-pas-modal="true"]').forEach(el => {
@@ -210,7 +201,93 @@ window.PasCore = (function() {
     });
 
     // =========================================================================
-    // 3. PASCORE.STATE (Advanced Reactive Engine)
+    // 3. PASCORE.EVENTS (Pub/Sub Event Bus for Widget Communication)
+    // =========================================================================
+    const Events = {
+        _bus: document.createElement('div'),
+        on: function(event, callback) {
+            this._bus.addEventListener(event, (e) => callback(e.detail));
+        },
+        emit: function(event, detail = {}) {
+            this._bus.dispatchEvent(new CustomEvent(event, { detail }));
+        }
+    };
+
+    // =========================================================================
+    // 4. PASCORE.DRAGGABLE (HTML5 Drag & Drop Engine)
+    // =========================================================================
+    const Draggable = {
+        init: function(containerSelector, onOrderUpdateCallback) {
+            const container = document.querySelector(containerSelector);
+            if (!container) return;
+
+            let draggedEl = null;
+
+            // Make children draggable
+            Array.from(container.children).forEach(child => {
+                if (!child.hasAttribute('draggable')) child.setAttribute('draggable', 'true');
+            });
+
+            container.addEventListener('dragstart', (e) => {
+                draggedEl = e.target.closest('[draggable="true"]');
+                if (!draggedEl) return;
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/html', draggedEl.innerHTML);
+                setTimeout(() => draggedEl.classList.add('opacity-50', 'bg-slate-50', 'scale-[0.98]'), 0);
+            });
+
+            container.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                const targetEl = e.target.closest('[draggable="true"]');
+                if (targetEl && targetEl !== draggedEl) {
+                    const bounding = targetEl.getBoundingClientRect();
+                    const offset = bounding.y + (bounding.height / 2);
+                    if (e.clientY - offset > 0) targetEl.after(draggedEl);
+                    else targetEl.before(draggedEl);
+                }
+            });
+
+            container.addEventListener('dragend', () => {
+                if (!draggedEl) return;
+                draggedEl.classList.remove('opacity-50', 'bg-slate-50', 'scale-[0.98]');
+                draggedEl = null;
+
+                if (typeof onOrderUpdateCallback === 'function') {
+                    // Returns array of data-id attributes reflecting the new order
+                    const newOrder = Array.from(container.children)
+                                          .map(el => el.getAttribute('data-id'))
+                                          .filter(Boolean);
+                    onOrderUpdateCallback(newOrder);
+                }
+            });
+        }
+    };
+
+    // =========================================================================
+    // 5. PASCORE.CSS (Scoped CSS Injector for Widgets)
+    // =========================================================================
+    const CSS = {
+        injectScoped: function(cssString, scopeClass) {
+            if (document.getElementById('pascore-style-' + scopeClass)) return;
+            const style = document.createElement('style');
+            style.id = 'pascore-style-' + scopeClass;
+            
+            // Regex to prefix CSS selectors without touching @keyframes or @media
+            const scopedCss = cssString.replace(/(^|\}\s*)([^{]+)\{/g, (match, prefix, selectors) => {
+                if (selectors.trim().startsWith('@')) return match;
+                const scopedSelectors = selectors.split(',')
+                                       .map(s => `.${scopeClass} ${s.trim()}`)
+                                       .join(', ');
+                return prefix + scopedSelectors + ' {';
+            });
+            
+            style.innerHTML = scopedCss;
+            document.head.appendChild(style);
+        }
+    };
+
+    // =========================================================================
+    // 6. PASCORE.STATE (Advanced Reactive Engine with Global Delegation)
     // =========================================================================
     const State = {
         create: function(rootSelector, initialData = {}, methods = {}) {
@@ -220,7 +297,6 @@ window.PasCore = (function() {
                 return null;
             }
 
-            // Smart evaluator function to translate strings into JavaScript logic
             const evaluate = (expr, state, localVars = {}) => {
                 try {
                     const ctx = { ...state, ...localVars };
@@ -232,43 +308,35 @@ window.PasCore = (function() {
             };
 
             const updateDOM = (state) => {
-                // 1. Text Content Binding
+                // Text Content
                 rootEl.querySelectorAll('[pas-text]').forEach(el => {
                     const val = evaluate(el.getAttribute('pas-text'), state);
-                    if (val !== undefined) el.textContent = val;
+                    if (val !== undefined && el.textContent !== String(val)) el.textContent = val;
                 });
 
-                // 2. Visibility Binding
+                // Visibility
                 rootEl.querySelectorAll('[pas-show]').forEach(el => {
                     const condition = evaluate(el.getAttribute('pas-show'), state);
                     el.style.display = condition ? '' : 'none';
                 });
 
-                // 3. Input Value Binding (Handles select, radio, checkbox seamlessly)
+                // Values Bindings
                 rootEl.querySelectorAll('[pas-model]').forEach(el => {
                     const key = el.getAttribute('pas-model');
                     const val = evaluate(key, state);
-
                     if (val !== undefined) {
-                        if (el.type === 'checkbox') {
-                            el.checked = !!val;
-                        } else if (el.type === 'radio') {
-                            el.checked = (el.value === String(val));
-                        } else if (el.tagName === 'SELECT') {
-                            if (el.value !== String(val)) el.value = val;
-                        } else {
-                            if (el.value !== String(val)) el.value = val;
-                        }
+                        if (el.type === 'checkbox') el.checked = !!val;
+                        else if (el.type === 'radio') el.checked = (el.value === String(val));
+                        else if (el.value !== String(val)) el.value = val;
                     }
                 });
 
-                // 4. Dynamic Attribute Binding
+                // Dynamic Attributes
                 rootEl.querySelectorAll('*').forEach(el => {
                     Array.from(el.attributes).forEach(attr => {
                         if (attr.name.startsWith('pas-bind:')) {
                             const targetAttr = attr.name.split(':')[1];
                             const val = evaluate(attr.value, state);
-
                             if (val) {
                                 el.setAttribute(targetAttr, val === true ? targetAttr : val);
                                 if (val === true) el[targetAttr] = true; 
@@ -280,7 +348,7 @@ window.PasCore = (function() {
                     });
                 });
 
-                // 5. Conditional CSS Class Binding
+                // CSS Classes
                 rootEl.querySelectorAll('[pas-class]').forEach(el => {
                     const classObj = evaluate(el.getAttribute('pas-class'), state) || {};
                     for (let cls in classObj) {
@@ -290,8 +358,7 @@ window.PasCore = (function() {
                     }
                 });
 
-                // 6. Template Array Rendering (For loops)
-                // Usage: <template pas-for="item in arrayData" pas-key="id"> ...HTML... </template>
+                // Template Array Rendering (pas-for)
                 rootEl.querySelectorAll('template[pas-for]').forEach(tpl => {
                     const expr = tpl.getAttribute('pas-for'); 
                     const parts = expr.split(' in ');
@@ -308,12 +375,11 @@ window.PasCore = (function() {
                         tpl.parentNode.insertBefore(container, tpl.nextSibling);
                     }
 
-                    container.innerHTML = ''; // Clear for re-render
+                    container.innerHTML = ''; 
                     
                     arrayData.forEach((item) => {
                         const clone = tpl.content.cloneNode(true);
                         
-                        // Parse simple {{item.prop}} templating within the loop
                         const walker = document.createTreeWalker(clone, NodeFilter.SHOW_TEXT, null, false);
                         let textNode;
                         while ((textNode = walker.nextNode())) {
@@ -328,7 +394,6 @@ window.PasCore = (function() {
                             }
                         }
                         
-                        // Attribute parsing within loop
                         clone.querySelectorAll('*').forEach(el => {
                             Array.from(el.attributes).forEach(attr => {
                                 if (attr.value.includes('{{')) {
@@ -356,7 +421,7 @@ window.PasCore = (function() {
                 }
             });
 
-            // Expose methods to stateProxy
+            // Expose methods to proxy
             for (let funcName in methods) {
                 if (typeof methods[funcName] === 'function') {
                     stateProxy[funcName] = function(eventOrArgs) {
@@ -365,66 +430,74 @@ window.PasCore = (function() {
                 }
             }
 
-            // Init Two-Way Data Binding for Inputs via Event Delegation (Safe for dynamic elements)
+            // --- EVENT DELEGATION ENGINE ---
+            // This replaces static loops so dynamically rendered elements are automatically clickable
+
+            // 1. Two-Way Data Binding Inputs
             rootEl.addEventListener('input', (e) => {
-                const el = e.target;
-                if (el.hasAttribute('pas-model')) {
+                const el = e.target.closest('[pas-model]');
+                if (el) {
                     const key = el.getAttribute('pas-model');
                     if (el.type === 'checkbox') stateProxy[key] = el.checked;
                     else stateProxy[key] = el.value;
                 }
             });
 
-            // Handle Radio Button and Select changes specifically
             rootEl.addEventListener('change', (e) => {
-                const el = e.target;
-                if (el.hasAttribute('pas-model') && (el.type === 'radio' || el.tagName === 'SELECT')) {
-                     const key = el.getAttribute('pas-model');
-                     stateProxy[key] = el.value;
+                const el = e.target.closest('[pas-model]');
+                if (el && (el.type === 'radio' || el.tagName === 'SELECT')) {
+                    const key = el.getAttribute('pas-model');
+                    stateProxy[key] = el.value;
                 }
             });
 
-            // Init Event Listeners
-            rootEl.querySelectorAll('*').forEach(el => {
-                Array.from(el.attributes).forEach(attr => {
-                    let isEvent = false;
-                    let eventType = '';
-                    let modifiers = [];
-                    
-                    if (attr.name === 'pas-click') {
-                        isEvent = true;
-                        eventType = 'click';
-                    } else if (attr.name.startsWith('pas-on:')) {
-                        isEvent = true;
-                        const parts = attr.name.split(':');
-                        const eventParts = parts[1].split('.');
-                        eventType = eventParts[0];
-                        modifiers = eventParts.slice(1);
-                    }
-
-                    if (isEvent) {
-                        const funcName = attr.value.split('(')[0].trim(); 
+            // 2. Global Event Handler for pas-click & pas-on:*
+            const handleEvent = (e) => {
+                // Handling standard pas-click
+                if (e.type === 'click') {
+                    const clickEl = e.target.closest('[pas-click]');
+                    if (clickEl) {
+                        const funcDef = clickEl.getAttribute('pas-click');
+                        const funcName = funcDef.split('(')[0].trim();
                         if (typeof methods[funcName] === 'function') {
-                            el.addEventListener(eventType, (e) => {
-                                // Apply Modifiers (.prevent, .stop)
-                                if (modifiers.includes('prevent') || eventType === 'submit' || el.tagName === 'A') e.preventDefault();
-                                if (modifiers.includes('stop')) e.stopPropagation();
-
-                                methods[funcName].call(methods, stateProxy, e);
-                            });
+                            if (clickEl.tagName === 'A' || clickEl.tagName === 'BUTTON') e.preventDefault();
+                            methods[funcName].call(methods, stateProxy, e);
                         }
                     }
-                });
+                }
+
+                // Handling advanced pas-on:[event] modifiers
+                // Scans the path of the event to see if any element has pas-on:event
+                const path = e.composedPath ? e.composedPath() : [];
+                for (let el of path) {
+                    if (!el.attributes) continue;
+                    Array.from(el.attributes).forEach(attr => {
+                        if (attr.name.startsWith(`pas-on:${e.type}`)) {
+                            const modifiers = attr.name.split('.').slice(1);
+                            const funcName = attr.value.split('(')[0].trim();
+                            if (typeof methods[funcName] === 'function') {
+                                if (modifiers.includes('prevent') || e.type === 'submit') e.preventDefault();
+                                if (modifiers.includes('stop')) e.stopPropagation();
+                                methods[funcName].call(methods, stateProxy, e);
+                            }
+                        }
+                    });
+                }
+            };
+
+            // Register standard delegated events
+            ['click', 'submit', 'keyup', 'keydown'].forEach(eventType => {
+                rootEl.addEventListener(eventType, handleEvent);
             });
 
-            // Initial render
+            // Initial DOM rendering
             updateDOM(stateProxy);
             return stateProxy;
         }
     };
 
     // =========================================================================
-    // 4. PASCORE.EDITOR (Quill Real-Time WYSIWYG Integration)
+    // 7. PASCORE.EDITOR (Quill Real-Time WYSIWYG Integration)
     // =========================================================================
     const Editor = {
         init: function(elementId, initialContent = '', onChangeCallback = null) {
@@ -449,12 +522,10 @@ window.PasCore = (function() {
                 }
             });
 
-            // Inject initial HTML content
             if (initialContent) {
                 quill.clipboard.dangerouslyPasteHTML(initialContent);
             }
 
-            // Real-time synchronization to State context
             if (typeof onChangeCallback === 'function') {
                 quill.on('text-change', () => {
                     onChangeCallback(quill.root.innerHTML);
@@ -465,7 +536,7 @@ window.PasCore = (function() {
         }
     };
 
-    // Expose modules to the global scope
-    return { Net, UI, State, Editor };
+    // Expose all modules to the global scope
+    return { Net, UI, Events, Draggable, CSS, State, Editor };
 
 })();
