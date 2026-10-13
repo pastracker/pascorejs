@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PasCore Engine v1.0.0 - PasPages Core Team</title>
+    <title>PasCore Engine v1.1.0 - PasPages Core Team</title>
     
     <!-- Favicon -->
     <link rel="icon" href="https://cdn.paspages.com/img/favicon.png">
@@ -16,7 +16,7 @@
     <script src="https://cdn.jsdelivr.net/npm/suneditor@latest/dist/suneditor.min.js"></script>
     
     <!-- THE PASCORE ENGINE CDN -->
-    <script src="https://pascorejs.pages.dev/v/1.0.0.js"></script>
+    <script src="https://pascorejs.pages.dev/v/1.1.0.js"></script>
     
     <script>
         tailwind.config = {
@@ -113,15 +113,12 @@
             </div>
             <div class="flex items-center gap-4">
                 <span class="px-3 py-1 rounded-full bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 text-xs font-bold tracking-wider">
-                    v1.0.0
+                    v1.1.0
                 </span>
                 <a href="#quickstart" class="hidden sm:block text-sm text-gray-300 hover:text-white transition">Quick Start</a>
                 <a href="#modules" class="hidden sm:block text-sm text-gray-300 hover:text-white transition">Modules</a>
                 <a href="#demo" class="text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-lg transition shadow-[0_0_15px_rgba(79,70,229,0.4)]">
                     Live Demo
-                </a>
-                <a href="/pascommerce" class="text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-lg transition shadow-[0_0_15px_rgba(79,70,229,0.4)]">
-                    PasCommerce SDK
                 </a>
             </div>
         </div>
@@ -139,7 +136,7 @@
             PasCore Engine
         </h1>
         <p class="text-lg md:text-xl text-gray-300 max-w-3xl mb-4 leading-relaxed font-light">
-            Internal WebOS Framework for PasPages. Vanilla JS framework powering the PasCore Admin Interface. Zero external dependencies. Designed for absolute speed, replacing Alpine.js & Axios entirely.
+            Enterprise WebOS Framework for PasPages. Zero external dependencies. Now upgraded with Global Event Delegation, Scoped CSS, Pub/Sub EventBus, and Drag & Drop.
         </p>
         <p class="text-indigo-400 font-medium tracking-wide mb-10">
             Crafted with precision by the <span class="text-white font-bold">PasPages Core Team</span>.
@@ -150,13 +147,13 @@
             <div class="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition duration-500"></div>
             <div class="relative code-block rounded-xl p-4 md:p-6 text-left shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4">
                 <div class="w-full overflow-x-auto">
-                    <p class="text-gray-400 text-xs uppercase tracking-wider mb-2 font-semibold">CDN Installation - v1.0.0</p>
+                    <p class="text-gray-400 text-xs uppercase tracking-wider mb-2 font-semibold">CDN Installation - v1.1.0</p>
                     <code class="text-sm font-mono text-gray-300 block whitespace-nowrap">
                         <span class="text-pink-400">&lt;script</span> 
-                        <span class="text-green-300">src</span>=<span class="text-yellow-200">"https://pascorejs.pages.dev/v/1.0.0.js"</span><span class="text-pink-400">&gt;&lt;/script&gt;</span>
+                        <span class="text-green-300">src</span>=<span class="text-yellow-200">"https://pascorejs.pages.dev/v/1.1.0.js"</span><span class="text-pink-400">&gt;&lt;/script&gt;</span>
                     </code>
                 </div>
-                <button onclick="navigator.clipboard.writeText('<script src=\'https://pascorejs.pages.dev/v/1.0.0.js\'></script>'); PasCore.UI.toast('success', 'CDN URL copied to clipboard!')" class="shrink-0 bg-white/5 hover:bg-white/10 text-white p-3 rounded-lg border border-white/10 transition flex items-center justify-center gap-2">
+                <button onclick="navigator.clipboard.writeText('<script src=\'https://pascorejs.pages.dev/v/1.1.0.js\'></script>'); PasCore.UI.toast('success', 'CDN URL copied to clipboard!')" class="shrink-0 bg-white/5 hover:bg-white/10 text-white p-3 rounded-lg border border-white/10 transition flex items-center justify-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                 </button>
             </div>
@@ -166,52 +163,41 @@
     <!-- Modules Section -->
     <section id="modules" class="py-16 px-6 max-w-7xl mx-auto">
         <div class="text-center mb-12">
-            <h2 class="text-3xl font-bold text-white mb-4">Four Pillars of PasCore</h2>
-            <p class="text-gray-400 max-w-2xl mx-auto">A unified API for networking, UI updates, reactive state management, and WYSIWYG editing.</p>
+            <h2 class="text-3xl font-bold text-white mb-4">The Enterprise Pillars</h2>
+            <p class="text-gray-400 max-w-2xl mx-auto">Upgraded in v1.1.0 to handle widget interconnectivity and visual builders.</p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <!-- Net Module -->
             <div class="glass-panel p-8 rounded-2xl">
-                <div class="w-12 h-12 bg-indigo-500/20 text-indigo-400 rounded-xl flex items-center justify-center mb-6 border border-indigo-500/30">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                <div class="w-10 h-10 bg-indigo-500/20 text-indigo-400 rounded-xl flex items-center justify-center mb-4 border border-indigo-500/30">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                 </div>
-                <h3 class="text-xl font-bold text-white mb-3">1. PasCore.Net</h3>
-                <p class="text-gray-400 text-sm leading-relaxed mb-4">
-                    Advanced networking & API module. Automatically manages JWT tokens, standardizes backend payload wrapping, and gracefully intercepts 401/403 errors to handle session expiries.
-                </p>
-            </div>
-
-            <!-- UI Module -->
-            <div class="glass-panel p-8 rounded-2xl">
-                <div class="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-xl flex items-center justify-center mb-6 border border-emerald-500/30">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-                </div>
-                <h3 class="text-xl font-bold text-white mb-3">2. PasCore.UI</h3>
-                <p class="text-gray-400 text-sm leading-relaxed mb-4">
-                    DOM utilities, elegant notifications, Modals, and Confirmation Dialogs. Generates native animated DOM elements instantly, providing a seamless feedback loop.
+                <h3 class="text-lg font-bold text-white mb-2">PasCore.Net & UI</h3>
+                <p class="text-gray-400 text-sm leading-relaxed">
+                    Context-aware REST client with auto-JWT handling, paired with beautiful DOM-native Modals, Toasts, and Confirms.
                 </p>
             </div>
 
             <!-- State Module -->
-            <div class="glass-panel p-8 rounded-2xl">
-                <div class="w-12 h-12 bg-pink-500/20 text-pink-400 rounded-xl flex items-center justify-center mb-6 border border-pink-500/30">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+            <div class="glass-panel p-8 rounded-2xl border-indigo-500/30">
+                <div class="w-10 h-10 bg-pink-500/20 text-pink-400 rounded-xl flex items-center justify-center mb-4 border border-pink-500/30">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                 </div>
-                <h3 class="text-xl font-bold text-white mb-3">3. PasCore.State</h3>
-                <p class="text-gray-400 text-sm leading-relaxed mb-4">
-                    The Alpine.js killer. A high-performance reactive engine powered by JS Proxies. Use <code class="text-pink-300">pas-model</code>, <code class="text-pink-300">pas-text</code>, <code class="text-pink-300">pas-bind</code>, <code class="text-pink-300">pas-class</code>, and <code class="text-pink-300">pas-click</code> for true data binding.
+                <h3 class="text-lg font-bold text-white mb-2">PasCore.State</h3>
+                <p class="text-gray-400 text-sm leading-relaxed">
+                    High-performance reactive engine powered by JS Proxies. Now features Global Event Delegation for dynamically rendered HTML.
                 </p>
             </div>
 
-            <!-- Editor Module -->
+            <!-- Draggable & Events Module -->
             <div class="glass-panel p-8 rounded-2xl">
-                <div class="w-12 h-12 bg-blue-500/20 text-blue-400 rounded-xl flex items-center justify-center mb-6 border border-blue-500/30">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                <div class="w-10 h-10 bg-emerald-500/20 text-emerald-400 rounded-xl flex items-center justify-center mb-4 border border-emerald-500/30">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                 </div>
-                <h3 class="text-xl font-bold text-white mb-3">4. PasCore.Editor</h3>
-                <p class="text-gray-400 text-sm leading-relaxed mb-4">
-                    Enterprise WYSIWYG integration. Provides a unified wrapper around standard text editors, configuring toolbar options instantly for content management systems.
+                <h3 class="text-lg font-bold text-white mb-2">Drag & EventBus</h3>
+                <p class="text-gray-400 text-sm leading-relaxed">
+                    Native HTML5 Drag & Drop sorting array support, alongside a robust Pub/Sub EventBus for cross-widget communications.
                 </p>
             </div>
         </div>
@@ -225,72 +211,91 @@
             <div class="relative bg-[#0b1120]/80 rounded-[22px] p-8 md:p-12">
                 <div class="mb-10 text-center">
                     <h2 class="text-3xl font-extrabold text-white mb-2 flex items-center justify-center gap-3">
-                        Interactive Demo
+                        Enterprise Interactive Demo
                     </h2>
-                    <p class="text-indigo-300">Experience <code class="text-white font-bold">PasCore.State</code> Advanced Bindings in action.</p>
+                    <p class="text-indigo-300">Experience <code class="text-white font-bold">PasCore v1.1.0</code> features in real-time.</p>
                 </div>
 
                 <!-- Demo Application Wrapper -->
-                <div id="pascore-demo-app" class="max-w-2xl mx-auto">
+                <div id="pascore-demo-app" class="max-w-3xl mx-auto">
                     
-                    <!-- Advanced Input Section: Select & Radio -->
-                    <div class="mb-6 bg-white/5 p-5 rounded-xl border border-white/10">
-                        <label class="block text-sm font-medium text-gray-400 mb-3">Theme Selector (Select & Radio Two-way Binding)</label>
-                        <div class="flex flex-col md:flex-row gap-4 mb-4">
-                            <!-- Radio Binding -->
-                            <div class="flex gap-4">
-                                <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
-                                    <input type="radio" pas-model="themeColor" value="indigo" class="w-4 h-4 text-indigo-500"> Indigo
-                                </label>
-                                <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
-                                    <input type="radio" pas-model="themeColor" value="emerald" class="w-4 h-4 text-emerald-500"> Emerald
-                                </label>
-                                <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
-                                    <input type="radio" pas-model="themeColor" value="rose" class="w-4 h-4 text-rose-500"> Rose
-                                </label>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <!-- Advanced Input Section -->
+                        <div class="bg-white/5 p-5 rounded-xl border border-white/10">
+                            <label class="block text-sm font-medium text-gray-400 mb-3">State Binding (Select & Radio)</label>
+                            <div class="flex flex-col gap-4 mb-4">
+                                <div class="flex gap-4">
+                                    <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+                                        <input type="radio" pas-model="themeColor" value="indigo" class="w-4 h-4 text-indigo-500"> Indigo
+                                    </label>
+                                    <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+                                        <input type="radio" pas-model="themeColor" value="emerald" class="w-4 h-4 text-emerald-500"> Emerald
+                                    </label>
+                                    <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+                                        <input type="radio" pas-model="themeColor" value="rose" class="w-4 h-4 text-rose-500"> Rose
+                                    </label>
+                                </div>
+                                <select pas-model="themeColor" class="w-full bg-[#020617] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-indigo-500">
+                                    <option value="indigo">Indigo Theme Mode</option>
+                                    <option value="emerald">Emerald Theme Mode</option>
+                                    <option value="rose">Rose Theme Mode</option>
+                                </select>
                             </div>
                         </div>
-                        <!-- Select Binding -->
-                        <select pas-model="themeColor" class="w-full bg-[#020617] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-indigo-500">
-                            <option value="indigo">Indigo Theme Mode</option>
-                            <option value="emerald">Emerald Theme Mode</option>
-                            <option value="rose">Rose Theme Mode</option>
-                        </select>
-                    </div>
 
-                    <!-- Array Looping Section -->
-                    <div class="mb-6 bg-white/5 p-5 rounded-xl border border-white/10">
-                        <div class="flex justify-between items-center mb-3">
-                            <label class="block text-sm font-medium text-gray-400">Tech Stack (Array Looping & Data Adding)</label>
-                            <button pas-click="addFramework()" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded text-white font-bold transition">Add Random Stack</button>
-                        </div>
-                        
-                        <div class="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
-                            <!-- pas-for Template Looping -->
-                            <template pas-for="item in frameworks" pas-key="id">
-                                <div class="bg-[#020617] px-4 py-3 rounded-lg border border-gray-700 flex justify-between items-center text-sm shadow-inner group">
-                                    <span class="text-white font-bold">{{item.name}}</span>
-                                    <div class="flex items-center gap-3">
-                                        <span class="text-xs px-2 py-1 rounded bg-gray-800 text-gray-300">{{item.type}}</span>
-                                        <button pas-click="removeFramework(item.id)" class="text-red-500 opacity-50 group-hover:opacity-100 transition-opacity">✕</button>
-                                    </div>
+                        <!-- Event Bus Pub/Sub Section -->
+                        <div class="bg-white/5 p-5 rounded-xl border border-white/10 flex flex-col justify-between">
+                            <label class="block text-sm font-medium text-gray-400 mb-3">EventBus (PasCore.Events)</label>
+                            <p class="text-xs text-gray-500 mb-4 leading-relaxed">Simulates cross-widget communication. Widget A emits a ping, Widget B listens.</p>
+                            <div class="flex gap-3">
+                                <button pas-click="emitPing()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition">Emit Signal</button>
+                                <div class="flex-1 bg-[#020617] border border-gray-700 rounded-lg p-2 text-center flex items-center justify-center overflow-hidden">
+                                    <span pas-text="eventLog" class="text-[11px] text-emerald-400 font-mono truncate">Awaiting signal...</span>
                                 </div>
-                            </template>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Input Section -->
-                    <div class="mb-6">
-                        <label class="block text-sm font-medium text-gray-400 mb-2">Transmission Message</label>
-                        <div class="relative">
-                            <input pas-model="transmission" type="text" class="w-full bg-[#020617] border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 transition shadow-inner" placeholder="Enter a message to broadcast...">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <!-- Array Looping Section with Global Delegation -->
+                        <div class="bg-white/5 p-5 rounded-xl border border-white/10">
+                            <div class="flex justify-between items-center mb-3">
+                                <label class="block text-sm font-medium text-gray-400">Array <code class="text-xs text-pink-400">pas-for</code></label>
+                                <button pas-click="addFramework()" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded text-white font-bold transition">Add Random</button>
+                            </div>
+                            
+                            <div class="space-y-2 max-h-[160px] overflow-y-auto pr-2 custom-scrollbar">
+                                <template pas-for="item in frameworks">
+                                    <div class="bg-[#020617] px-4 py-3 rounded-lg border border-gray-700 flex justify-between items-center text-sm shadow-inner group">
+                                        <span class="text-white font-bold">{{item.name}}</span>
+                                        <div class="flex items-center gap-3">
+                                            <span class="text-[10px] px-2 py-1 rounded bg-gray-800 text-gray-300">{{item.type}}</span>
+                                            <!-- Global event delegation works inside loops! -->
+                                            <button pas-click="removeFramework" data-id="{{item.id}}" class="text-red-500 opacity-50 group-hover:opacity-100 transition-opacity">✕</button>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- Drag and Drop Engine -->
+                        <div class="bg-white/5 p-5 rounded-xl border border-white/10 flex flex-col">
+                            <label class="block text-sm font-medium text-gray-400 mb-3">HTML5 Draggable (Widgets Order)</label>
+                            
+                            <!-- Container initialized with PasCore.Draggable -->
+                            <ul id="draggable-demo-list" class="space-y-2 flex-1 max-h-[160px] overflow-y-auto pr-2 custom-scrollbar">
+                                <li data-id="widget_sidebar" class="bg-[#020617] px-4 py-3 rounded-lg border border-dashed border-gray-600 text-white text-sm font-bold cursor-grab hover:bg-gray-800 transition">⋮⋮ Sidebar Profile</li>
+                                <li data-id="widget_banner" class="bg-[#020617] px-4 py-3 rounded-lg border border-dashed border-gray-600 text-white text-sm font-bold cursor-grab hover:bg-gray-800 transition">⋮⋮ Promo Banner</li>
+                                <li data-id="widget_social" class="bg-[#020617] px-4 py-3 rounded-lg border border-dashed border-gray-600 text-white text-sm font-bold cursor-grab hover:bg-gray-800 transition">⋮⋮ Social Links</li>
+                            </ul>
                         </div>
                     </div>
 
                     <!-- Output Section (Reactive Classes & Text) -->
                     <div class="glass-panel rounded-xl p-6 mb-8 border border-white/10 text-center transition-all duration-300">
-                        <p class="text-xs text-gray-400 mb-2 uppercase tracking-widest font-semibold">Live Preview Output</p>
-                        <!-- Dynamic CSS class based on the selected theme -->
+                        <p class="text-xs text-gray-400 mb-2 uppercase tracking-widest font-semibold">Reactive Live Text Output</p>
+                        <input pas-model="transmission" type="text" class="w-full text-center bg-transparent border-b border-gray-700 pb-2 mb-4 text-white focus:outline-none focus:border-indigo-500 transition" placeholder="Type here...">
+                        
                         <h3 class="text-3xl font-black min-h-[36px] break-words transition-colors duration-300" 
                             pas-class="{'text-indigo-400': themeColor === 'indigo', 'text-emerald-400': themeColor === 'emerald', 'text-rose-400': themeColor === 'rose'}" 
                             pas-text="transmission"></h3>
@@ -324,12 +329,12 @@
     </section>
 
     <!-- Modal Template -->
-    <div id="demo-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm items-center justify-center transition-all duration-200" style="display:none;">
+    <div id="demo-modal" class="fixed inset-0 z-[9999] bg-slate-900/60 backdrop-blur-sm items-center justify-center transition-all duration-200" style="display:none;">
         <div class="bg-slate-800 p-8 rounded-3xl shadow-2xl max-w-md w-full transition-all duration-200 transform scale-95 opacity-0 text-center">
-            <h3 class="text-2xl font-black text-white mb-2">Hello from Modal!</h3>
-            <p class="text-slate-400 mb-6">This is controlled by <code>PasCore.UI.modal</code>.</p>
+            <h3 class="text-2xl font-black text-white mb-2">PasCore.UI.modal</h3>
+            <p class="text-slate-400 mb-6">DOM-native elegant transition modal system.</p>
             <button onclick="PasCore.UI.modal('demo-modal', 'hide')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition-all">
-                Close Modal
+                Acknowledge & Close
             </button>
         </div>
     </div>
@@ -344,7 +349,7 @@
                 &copy; 2026 PasPages Core Team. All systems operational.
             </p>
             <div class="text-sm text-gray-500 font-mono">
-                PasCore Engine v1.0.0
+                PasCore Engine v1.1.0
             </div>
         </div>
     </footer>
@@ -354,17 +359,23 @@
     <!-- ========================================== -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Initialize the Demo App using PasCore.State
+            // 1. Initialize PasCore.Draggable Demo
+            PasCore.Draggable.init('#draggable-demo-list', (newOrder) => {
+                PasCore.UI.toast('info', 'Widgets reordered: ' + newOrder.join(' ➔ '));
+            });
+
+            // 2. Initialize the Demo App using PasCore.State
             window.demoApp = PasCore.State.create('#pascore-demo-app', 
                 {
                     // Initial State Data
-                    transmission: 'PasCore is fully operational.',
+                    transmission: 'PasCore v1.1.0 Ready.',
                     isBroadcasting: false,
-                    themeColor: 'emerald', // Tested via Select & Radio bindings
+                    themeColor: 'emerald', 
+                    eventLog: 'Awaiting signal...',
                     frameworks: [
-                        { id: 1, name: 'PasCore Engine', type: 'Frontend VanillaJS' },
-                        { id: 2, name: 'HonoX Framework', type: 'Backend Gateway' },
-                        { id: 3, name: 'Cloudflare D1', type: 'Edge Database' }
+                        { id: 1, name: 'PasCore Engine', type: 'VanillaJS Core' },
+                        { id: 2, name: 'HonoX Framework', type: 'Edge API' },
+                        { id: 3, name: 'Cloudflare D1', type: 'Database' }
                     ]
                 },
                 {
@@ -375,34 +386,32 @@
                             return;
                         }
                         
-                        // Toggle UI elements
                         state.isBroadcasting = true;
-                        
-                        // Simulate network delay
                         setTimeout(() => {
-                            PasCore.UI.toast('success', `Broadcast successful: "${state.transmission}"`);
+                            PasCore.UI.toast('success', `Broadcast: "${state.transmission}"`);
                             state.isBroadcasting = false;
-                        }, 1500);
+                        }, 1200);
                     },
 
                     addFramework: function(state) {
                         const newId = Date.now();
-                        const randomStacks = ['SQLite Core', 'Tailwind CSS', 'Redis Cache', 'Edge Worker'];
+                        const randomStacks = ['SQLite Sync', 'Tailwind', 'Redis Cache', 'Edge Worker'];
                         const randomPick = randomStacks[Math.floor(Math.random() * randomStacks.length)];
                         
-                        // Array mutation is caught by the state proxy and re-rendered via <template pas-for>
-                        state.frameworks = [...state.frameworks, { id: newId, name: randomPick, type: 'Tech Expansion' }];
-                        PasCore.UI.toast('info', 'New tech stack added!');
+                        // Direct Array Mutation!
+                        state.frameworks = [...state.frameworks, { id: newId, name: randomPick, type: 'Expansion' }];
+                        PasCore.UI.toast('info', 'Tech stack added!');
                     },
 
+                    // Powered by Global Event Delegation (catches dynamically rendered buttons)
                     removeFramework: function(state, e) {
-                        // In looping, we pass arguments using bind or data attributes if needed, 
-                        // but here we can extract id if passed directly.
-                        // However, pas-click inside loop evaluates against the parent state.
-                        // We extract it via a custom argument passing trick or directly evaluate.
-                        // Since we pass item.id in HTML: pas-click="removeFramework(item.id)"
-                        const idToRemove = e; 
+                        const idToRemove = parseInt(e.currentTarget.getAttribute('data-id'));
                         state.frameworks = state.frameworks.filter(f => f.id !== idToRemove);
+                    },
+
+                    emitPing: function(state) {
+                        // Emit a global event using PasCore.Events Pub/Sub
+                        PasCore.Events.emit('system_ping', { time: new Date().toLocaleTimeString() });
                     },
                     
                     openSampleModal: function(state) {
@@ -416,14 +425,17 @@
                             'Yes, Override'
                         );
                         
-                        if (isConfirmed) {
-                            PasCore.UI.toast('success', 'System override authorized.');
-                        } else {
-                            PasCore.UI.toast('warning', 'Override sequence aborted.');
-                        }
+                        if (isConfirmed) PasCore.UI.toast('success', 'System override authorized.');
+                        else PasCore.UI.toast('warning', 'Override sequence aborted.');
                     }
                 }
             );
+
+            // 3. Listen to the global EventBus to update the EventLog
+            PasCore.Events.on('system_ping', (data) => {
+                window.demoApp.eventLog = `Signal Rx: ${data.time}`;
+                PasCore.UI.toast('success', 'EventBus caught the ping!');
+            });
         });
     </script>
 
