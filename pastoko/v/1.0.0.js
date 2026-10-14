@@ -28,17 +28,17 @@ window.Pastoko = (function() {
     locale: 'id-ID',
     fractionDigits: 0,
 
-    // Cart Button & Drawer Customization (FITUR BARU)
-    cartStyle: 'circle',        // 'circle' | 'pill' | 'square' | 'minimal' | 'none'
-    cartMode: 'drawer',         // 'drawer' | 'modal' | 'bottom-sheet'
+    // Cart Button & Drawer Customization
+    cartStyle: 'circle',          // 'circle' | 'pill' | 'square' | 'minimal' | 'none'
+    cartMode: 'drawer',           // 'drawer' | 'modal' | 'bottom-sheet'
     cartPosition: 'bottom-right', // 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left' | 'bottom-center'
-    cartDrawerSide: 'right',    // 'right' | 'left'
-    cartIcon: 'bag',            // 'bag' | 'cart' | 'basket'
+    cartDrawerSide: 'right',      // 'right' | 'left'
+    cartIcon: 'bag',              // 'bag' | 'cart' | 'basket'
 
     // Extra Commerce Features
-    freeShippingThreshold: 0,   // Set > 0 (e.g. 100000) to show Free Shipping Progress Bar in cart
-    enableOrderNotes: true,     // Allow customers to write order notes inside cart drawer
-    whatsappNumber: '',         // Optional: e.g. '6281234567890' to enable Direct WhatsApp Checkout button
+    freeShippingThreshold: 0,     // Set > 0 (e.g. 100000) to show Free Shipping Progress Bar in cart
+    enableOrderNotes: true,       // Allow customers to write order notes inside cart drawer
+    whatsappNumber: '',           // Optional: e.g. '6281234567890' to enable Direct WhatsApp Checkout button
     whatsappTemplate: 'Halo, saya ingin memesan:\n{items}\n\n*Total: {total}*\nCatatan: {notes}'
   };
 
@@ -100,7 +100,7 @@ window.Pastoko = (function() {
   // =========================================================================
   const Net = {
     _getToken: function() {
-      return localStorage.getItem(config.tokenKey) || localStorage.getItem('ptk_token');
+      return localStorage.getItem(config.tokenKey) || localStorage.getItem('pastoko_member_jwt') || localStorage.getItem('ptk_token');
     },
 
     getHeaders: function() {
@@ -138,30 +138,47 @@ window.Pastoko = (function() {
       try {
         const response = await fetch(url, options);
 
-        if (response.status === 401 || response.status === 403) {
-          console.error('[Pastoko.Net] Unauthorized. Session expired.');
-          UI.toast('error', 'Sesi Anda telah berakhir. Silakan login kembali.');
-          if (config.loginUrl && window.location.pathname.startsWith('/admin')) {
-            setTimeout(() => { window.location.href = config.loginUrl; }, 1500);
-          }
-          return { success: false, status: response.status, message: 'Unauthorized' };
-        }
-
+        // Parse response body terlebih dahulu agar pesan error asli dari backend tidak hilang
         const contentType = response.headers.get('content-type');
         let result = {};
 
         if (contentType && contentType.includes('application/json')) {
-          result = await response.json();
+          try {
+            result = await response.json();
+          } catch (e) {
+            result = { success: false, message: 'Invalid JSON response' };
+          }
         } else {
           const textData = await response.text();
           result = { success: response.ok, message: textData };
+        }
+
+        // Cek apakah ini endpoint autentikasi / publik (login, register, setup)
+        const isAuthEndpoint = /\/(auth|login|register|setup)(\/|$)/i.test(url);
+        const isOnLoginPage = /\/(login|register)(\/|$)/i.test(window.location.pathname);
+
+        // Hanya tampilkan "Sesi berakhir" jika BUKAN sedang login/register/setup
+        if ((response.status === 401 || response.status === 403) && !isAuthEndpoint && !isOnLoginPage) {
+          console.warn('[Pastoko.Net] Unauthorized. Session expired.');
+          UI.toast('error', result.message || 'Sesi Anda telah berakhir. Silakan login kembali.');
+          if (window.location.pathname.startsWith('/admin')) {
+            setTimeout(() => { window.location.href = '/admin/login'; }, 1500);
+          } else if (window.location.pathname.startsWith('/member')) {
+            setTimeout(() => { window.location.href = '/member/login'; }, 1500);
+          }
+          return {
+            ...result,
+            success: false,
+            status: response.status,
+            message: result.message || 'Unauthorized'
+          };
         }
 
         return {
           ...result,
           success: response.ok && result.success !== false,
           data: result.data !== undefined ? result.data : result,
-          message: result.message || (response.ok ? 'Berhasil' : 'Permintaan gagal'),
+          message: result.message || (response.ok ? 'Berhasil' : `Permintaan gagal (${response.status})`),
           status: response.status
         };
       } catch (error) {
@@ -212,7 +229,6 @@ window.Pastoko = (function() {
     toast: function(typeOrMsg, messageOrType) {
       this.injectStyles();
 
-      // Mendukung UI.toast('success', 'Pesan') maupun UI.toast('Pesan', 'success')
       let type = 'success';
       let message = '';
       const validTypes = ['success', 'error', 'warning', 'info'];
@@ -265,9 +281,6 @@ window.Pastoko = (function() {
       }, 3200);
     },
 
-    // Mendukung 2 Mode:
-    // 1. Toggle elemen DOM berdasarkan ID: UI.modal('my-modal-id', 'show' | 'hide')
-    // 2. Render modal dinamis langsung: UI.modal('Judul Modal', '<p>Isi HTML</p>', 'max-w-lg')
     modal: function(idOrTitle, actionOrHtml = 'show', widthClass = 'max-w-lg') {
       this.injectStyles();
       const existingEl = document.getElementById(idOrTitle);
@@ -296,7 +309,6 @@ window.Pastoko = (function() {
         return;
       }
 
-      // Mode Render Dinamis
       let modalWrapper = document.getElementById('ptk-dynamic-modal');
       if (modalWrapper) modalWrapper.remove();
 
@@ -502,7 +514,6 @@ window.Pastoko = (function() {
 
   // =========================================================================
   // 7. PASTOKO.STATE (Reactive Engine with Deep Binding & Event Delegation)
-  // Mendukung direktif ptk-* (utama) dan pas-* (kompatibilitas template)
   // =========================================================================
   const State = {
     create: function(rootSelector, initialData = {}, methods = {}) {
@@ -692,7 +703,7 @@ window.Pastoko = (function() {
         }
       });
 
-      // Click & Custom Events Delegation (ptk-click / ptk-on:* / pas-click / pas-on:*)
+      // Click & Custom Events Delegation
       const handleEvent = (e) => {
         if (e.type === 'click') {
           const clickEl = e.target.closest('[ptk-click], [pas-click]');
@@ -768,7 +779,6 @@ window.Pastoko = (function() {
         return quill;
       }
 
-      // Fallback ke ContentEditable standar jika Quill tidak dimuat
       targetEl.contentEditable = true;
       targetEl.className += ' p-4 outline-none';
       targetEl.innerHTML = initialContent || '';
@@ -805,7 +815,6 @@ window.Pastoko = (function() {
       return storeState.cart.reduce((sum, item) => sum + ((parseFloat(item.price) || 0) * (parseInt(item.qty) || 0)), 0);
     },
 
-    // --- A. RENDER FLOATING CART DENGAN PILIHAN BENTUK (circle, pill, square, minimal, none) ---
     renderFloatingCart: function() {
       const existing = document.getElementById('ptk-floating-cart');
       if (existing) existing.remove();
@@ -850,7 +859,6 @@ window.Pastoko = (function() {
           <span id="ptk-cart-badge" class="text-xs font-black">0</span>
         `;
       } else {
-        // Default: 'circle'
         btn.className = `fixed ${posClasses} w-16 h-16 rounded-full shadow-2xl flex items-center justify-center text-white z-[9990] hover:scale-105 active:scale-95 transition-all focus:outline-none font-sans`;
         btn.innerHTML = `
           ${Helpers.getCartSvg(config.cartIcon, 'w-6 h-6')}
@@ -862,7 +870,6 @@ window.Pastoko = (function() {
       document.body.appendChild(btn);
     },
 
-    // --- B. RENDER CART CONTAINER DENGAN PILIHAN MODE (drawer, modal, bottom-sheet) ---
     renderCartContainer: function() {
       const existing = document.getElementById('ptk-cart-container');
       if (existing) existing.remove();
@@ -881,7 +888,6 @@ window.Pastoko = (function() {
         panelPositionClass = 'bottom-0 left-0 right-0 w-full max-w-2xl mx-auto max-h-[85vh] rounded-t-3xl';
         panelHiddenTransform = 'translate-y-full';
       } else {
-        // Default: 'drawer'
         if (config.cartDrawerSide === 'left') {
           panelPositionClass = 'top-0 left-0 w-full max-w-md h-full';
           panelHiddenTransform = '-translate-x-full';
@@ -896,7 +902,6 @@ window.Pastoko = (function() {
       wrapper.innerHTML = `
         <div id="ptk-cart-backdrop" class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm opacity-0 transition-opacity duration-300 cursor-pointer"></div>
         <div id="ptk-cart-panel" class="absolute ${panelPositionClass} bg-white shadow-2xl transform ${panelHiddenTransform} transition-all duration-300 flex flex-col pointer-events-auto overflow-hidden">
-          <!-- Header -->
           <div class="p-5 md:p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/70">
             <h2 class="text-lg font-black text-slate-900 flex items-center gap-2.5">
               <span style="color:${config.themeColor}">${Helpers.getCartSvg(config.cartIcon, 'w-5 h-5')}</span>
@@ -913,7 +918,6 @@ window.Pastoko = (function() {
             </div>
           </div>
 
-          <!-- Free Shipping Bar (Optional) -->
           <div id="ptk-shipping-bar-wrap" class="px-6 py-3 bg-slate-50 border-b border-slate-100 hidden">
             <div id="ptk-shipping-text" class="text-xs font-bold text-slate-600 mb-1.5"></div>
             <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
@@ -921,10 +925,8 @@ window.Pastoko = (function() {
             </div>
           </div>
 
-          <!-- Cart Items List -->
           <div id="ptk-cart-items" class="flex-1 overflow-y-auto p-5 md:p-6 space-y-3.5 bg-slate-50/30"></div>
 
-          <!-- Order Notes & Footer -->
           <div class="p-5 md:p-6 border-t border-slate-100 bg-white space-y-4">
             ${config.enableOrderNotes ? `
               <div>
@@ -974,7 +976,6 @@ window.Pastoko = (function() {
       }
     },
 
-    // --- C. BUKA & TUTUP KERANJANG ---
     openCart: function() {
       if (!document.getElementById('ptk-cart-container')) {
         this.renderCartContainer();
@@ -1009,9 +1010,6 @@ window.Pastoko = (function() {
       }, 300);
     },
 
-    // --- D. MANAJEMEN ITEM KERANJANG (ADD, UPDATE, REMOVE, CLEAR) ---
-    // Mendukung pemanggilan via Objek langsung: Pastoko.addToCart({ id, title, price, ... }, qty, variant)
-    // maupun via ID Produk dari atribut HTML: Pastoko.addToCart('prod_123', qty, variant)
     addToCart: function(productOrId, qty = 1, explicitVariant = null, silent = false) {
       const parsedQty = Math.max(1, parseInt(qty) || 1);
       let productObj = null;
@@ -1032,7 +1030,6 @@ window.Pastoko = (function() {
       const saleP = parseFloat(productObj.sale_price) || 0;
       let activePrice = saleP > 0 ? saleP : baseP;
 
-      // Deteksi Varian
       let variantName = explicitVariant !== null ? explicitVariant : (productObj.variant || '');
       const variantSelect = document.getElementById('product-variants') || document.querySelector(`[data-ptk-variant-for="${productId}"]`);
       if (!variantName && variantSelect && variantSelect.value !== '') {
@@ -1050,7 +1047,6 @@ window.Pastoko = (function() {
         }
       }
 
-      // Deteksi Gambar Thumbnail
       let imgUrl = productObj.img || productObj.image || productObj.thumbnail || 'https://placehold.co/200x200/f8fafc/94a3b8?text=Produk';
       if (productObj.images_json) {
         try {
@@ -1121,7 +1117,6 @@ window.Pastoko = (function() {
       return storeState.cart;
     },
 
-    // --- E. WISHLIST ENGINE ---
     toggleWishlist: function(productId) {
       const idStr = String(productId);
       const idx = storeState.wishlist.indexOf(idStr);
@@ -1159,7 +1154,6 @@ window.Pastoko = (function() {
       });
     },
 
-    // --- F. QUICK VIEW MODAL PRODUK ---
     quickView: function(productId) {
       const product = storeState.productsCatalog.find(p => String(p.id) === String(productId));
       if (!product) {
@@ -1196,7 +1190,6 @@ window.Pastoko = (function() {
       UI.modal(product.title || product.name || 'Detail Produk', html, 'max-w-2xl');
     },
 
-    // --- G. WHATSAPP DIRECT CHECKOUT ---
     checkoutWhatsApp: function() {
       if (!config.whatsappNumber) return;
       if (storeState.cart.length === 0) {
@@ -1218,7 +1211,6 @@ window.Pastoko = (function() {
       window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, '_blank');
     },
 
-    // --- H. SINKRONISASI TAMPILAN DOM KERANJANG & BADGE ---
     animateCartWiggle: function() {
       const btn = document.getElementById('ptk-floating-cart');
       if (!btn) return;
@@ -1232,7 +1224,6 @@ window.Pastoko = (function() {
       const subtotal = this.getSubtotal();
       const formattedSubtotal = Helpers.formatMoney(subtotal);
 
-      // Update Floating Badge (Circle / Square / Minimal)
       const badge = document.getElementById('ptk-cart-badge');
       if (badge) {
         badge.innerText = totalItems;
@@ -1242,13 +1233,11 @@ window.Pastoko = (function() {
         }
       }
 
-      // Update Pill Mode Badge & Subtotal
       const pillBadge = document.getElementById('ptk-cart-badge-pill');
       const pillTotal = document.getElementById('ptk-cart-pill-total');
       if (pillBadge) pillBadge.innerText = totalItems;
       if (pillTotal) pillTotal.innerText = formattedSubtotal;
 
-      // Update Drawer Header Count & Clear Button
       const drawerCount = document.getElementById('ptk-drawer-count');
       if (drawerCount) drawerCount.innerText = totalItems;
 
@@ -1258,7 +1247,6 @@ window.Pastoko = (function() {
         else clearBtn.classList.add('hidden');
       }
 
-      // Update Free Shipping Progress Bar
       const shipWrap = document.getElementById('ptk-shipping-bar-wrap');
       if (shipWrap) {
         if (config.freeShippingThreshold > 0 && storeState.cart.length > 0) {
@@ -1279,11 +1267,9 @@ window.Pastoko = (function() {
         }
       }
 
-      // Update semua elemen HTML di Header/Halaman yang memiliki atribut ptk-bind
       document.querySelectorAll('[ptk-bind="cart_count"]').forEach(el => { el.innerText = totalItems; });
       document.querySelectorAll('[ptk-bind="cart_subtotal"], [ptk-bind="cart_total"]').forEach(el => { el.innerText = formattedSubtotal; });
 
-      // Update Daftar Item di Drawer
       const itemsContainer = document.getElementById('ptk-cart-items');
       const subtotalEl = document.getElementById('ptk-cart-subtotal');
       if (!itemsContainer) return;
@@ -1326,13 +1312,11 @@ window.Pastoko = (function() {
       }
     },
 
-    // --- I. DOM SCANNER UNTUK TOMBOL AKSI [ptk-action] ---
     initScanner: function() {
       if (storeState.scannerInitialized) return;
       storeState.scannerInitialized = true;
 
       document.addEventListener('click', (e) => {
-        // Lightbox gambar otomatis untuk elemen dengan atribut [ptk-zoom]
         const zoomEl = e.target.closest('[ptk-zoom]');
         if (zoomEl) {
           const src = zoomEl.getAttribute('ptk-zoom') || zoomEl.getAttribute('src');
@@ -1349,7 +1333,6 @@ window.Pastoko = (function() {
         const qtyTarget = btn.getAttribute('ptk-qty-target');
         const variantAttr = btn.getAttribute('ptk-variant');
 
-        // Mendukung atribut data langsung pada tombol (tanpa harus menunggu fetch API katalog)
         const inlineTitle = btn.getAttribute('ptk-title') || btn.getAttribute('ptk-name');
         const inlinePrice = btn.getAttribute('ptk-price');
         const inlineImg = btn.getAttribute('ptk-img') || btn.getAttribute('ptk-image');
@@ -1393,7 +1376,6 @@ window.Pastoko = (function() {
       });
     },
 
-    // --- J. SINKRONISASI DATA TOKO MANDIRI ---
     loadStoreData: async function() {
       if (!config.autoFetchStoreData) return;
       try {
@@ -1416,9 +1398,7 @@ window.Pastoko = (function() {
         }
 
         this.refreshCartUI();
-      } catch (err) {
-        // Silent fail jika halaman berjalan secara statis / SSR murni tanpa endpoint
-      }
+      } catch (err) {}
     },
 
     init: function(userConfig = {}) {
@@ -1440,7 +1420,6 @@ window.Pastoko = (function() {
     config,
     init: (userConfig = {}) => Commerce.init(userConfig),
 
-    // Core Modules
     Net,
     UI,
     Events,
@@ -1451,7 +1430,6 @@ window.Pastoko = (function() {
     Commerce,
     Helpers,
 
-    // Top-Level Shortcuts untuk kemudahan pemanggilan di Hono JSX / Inline Event
     openCart: () => Commerce.openCart(),
     closeCart: () => Commerce.closeCart(),
     addToCart: (productOrId, qty, variant) => Commerce.addToCart(productOrId, qty, variant),
